@@ -7,91 +7,90 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 #app{max-width:480px;margin:auto;padding:14px;min-height:100vh}
-.bar{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px}
+.bar{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:8px}
 .fox{display:flex;gap:10px;align-items:center;margin:8px 0 14px}
 .fox b{font-size:44px}.fox span{background:var(--card);border-radius:14px;padding:10px 12px;font-size:15px;flex:1}
 .card{background:var(--card);border-radius:18px;padding:18px;text-align:center;margin-bottom:12px;box-shadow:0 2px 8px #0002}
-.big{font-size:64px}.tg{font-size:34px;font-weight:700}.mu{color:var(--mu)}
+.big{font-size:64px}.tg{font-size:34px;font-weight:700}.mu{color:var(--mu)}.im{height:1em;vertical-align:middle}
 button{font:inherit;border:0;border-radius:14px;padding:14px;background:var(--pr);color:#fff;font-weight:600;width:100%;margin:5px 0;min-height:48px}
 button.o{background:var(--card);color:var(--tx);border:2px solid #8884}
 button.ok{background:var(--ok);color:#fff}button.ko{background:var(--ko);color:#fff}
+button.sm{width:auto;min-height:0;padding:6px 14px;margin:0 8px 0 0}
 .row{display:flex;gap:8px}.row button{flex:1}
+.chips{display:flex;gap:6px;margin-top:10px}.chips button{padding:8px 0;min-height:0;margin:0}
 .blocks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:56px;padding:8px}
 .blocks button{width:auto;margin:0;font-size:20px;padding:10px 14px}
 .ans{border-bottom:3px dashed #8886;margin-bottom:14px}
 .prog{height:8px;background:#8883;border-radius:8px;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--pr);border-radius:8px}
+.ex div{text-align:left;padding:8px 0;border-bottom:1px solid #8883}.ex b{color:#d97706}
 input{font:inherit;width:100%;padding:12px;margin:4px 0;border-radius:10px;border:2px solid #8884;background:var(--card);color:var(--tx)}
 h3{margin:14px 0 6px}
-</style></head><body><div id="app"></div>
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);padding:10px 16px;border-radius:20px;box-shadow:0 2px 10px #0005;opacity:0;transition:.2s;pointer-events:none;z-index:9}
+</style></head><body><div id="app"></div><div id="toast"></div>
+<script src="data.js"></script>
 <script>
-// ---------- DATA: [target, phonetic, english, icon] ----------
-const D={
-de:{name:'German',flag:'🇩🇪',voice:'de-DE',lessons:[{title:'Food & drink',
- w:[['ich','ikh','I','🙋'],['esse','ESS-uh','eat','🍽️'],['trinke','TRINK-uh','drink','🥤'],['Wasser','VAH-ser','water','💧'],['Brot','broht','bread','🍞'],['Apfel','AP-fel','apple','🍎'],['und','oont','and','➕']],
- s:[[['Ich','trinke','Wasser'],'I drink water.'],[['Ich','esse','Brot'],'I eat bread.'],[['Ich','esse','Brot','und','ich','trinke','Wasser'],'I eat bread and I drink water.']]},
- {title:'Greetings',
- w:[['Hallo','HAH-loh','hello','👋'],['ich bin','ikh bin','I am','🙋'],['Anna','AH-nah','Anna','👩'],['du bist','doo bist','you are','👉'],['gut','goot','good','👍'],['Danke','DAHN-kuh','thanks','🙏']],
- s:[[['Hallo','ich bin','Anna'],'Hello, I am Anna.'],[['Du bist','gut'],'You are good.'],[['Hallo','Danke'],'Hello, thanks.']]}]},
-th:{name:'Thai',flag:'🇹🇭',voice:'th-TH',lessons:[{title:'Food & drink',
- w:[['ฉัน','chǎn','I','🙋'],['กิน','gin','eat','🍽️'],['ดื่ม','dèum','drink','🥤'],['น้ำ','náam','water','💧'],['ข้าว','kâao','rice','🍚'],['ผลไม้','pǒn-la-máai','fruit','🍎'],['และ','lé','and','➕']],
- s:[[['ฉัน','กิน','ข้าว'],'I eat rice.'],[['ฉัน','ดื่ม','น้ำ'],'I drink water.'],[['ฉัน','กิน','ข้าว','และ','ดื่ม','น้ำ'],'I eat rice and drink water.']]},
- {title:'Greetings',
- w:[['สวัสดี','sa-wàt-dee','hello','👋'],['ฉันชื่อ','chǎn chûue','my name is','🙋'],['แอนนา','ɛɛn-naa','Anna','👩'],['ขอบคุณ','kòop-kun','thank you','🙏'],['ครับ','kráp','(polite, male)','🙇‍♂️'],['ค่ะ','kâ','(polite, female)','🙇‍♀️']],
- s:[[['สวัสดี','ค่ะ'],'Hello (female speaker).'],[['ฉันชื่อ','แอนนา'],'My name is Anna.'],[['ขอบคุณ','ครับ'],'Thank you (male speaker).']]}]}};
-
-// ---------- STATE ----------
-let S=JSON.parse(localStorage.getItem('lf1')||'null')||{lang:'de',score:0,streak:0,last:'',custom:{de:[],th:[]},done:{}};
+const LV=['A1','A2','B1','B2','C1','C2'],NM={de:['German','🇩🇪','de-DE'],th:['Thai','🇹🇭','th-TH']};
+let S=Object.assign({lang:'de',lv:'A1',score:0,streak:0,last:'',custom:{de:[],th:[]},done:{}},JSON.parse(localStorage.getItem('lf1')||'{}'));
 const save=()=>localStorage.setItem('lf1',JSON.stringify(S));
 const $=s=>document.querySelector(s),sh=a=>[...a].sort(()=>Math.random()-.5);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang=D[S.lang].voice;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
-let ac;function beep(ok){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);g.gain.value=.1;o.frequency.value=ok?660:160;o.frequency.setValueAtTime(ok?990:120,ac.currentTime+.12);o.start();o.stop(ac.currentTime+.28)}catch(e){}}
-const lessons=()=>{const L=[...D[S.lang].lessons],c=S.custom[S.lang];if(c.length)L.push({title:'My words',w:c,s:[]});return L};
-let Q=[],qi=0,msg='Ready to learn? 🦊',cur=null;
-
-// ---------- UI ----------
+const ic=i=>/\.(png|jpe?g|svg|webp)$/i.test(i)?`<img class="im" src="img/${i}">`:i;
+const tk=s=>s.replace(/\*/g,'').split(' '),bold=s=>esc(s).replace(/\*(.+?)\*/g,'<b>$1</b>');
+function speak(t){try{const u=new SpeechSynthesisUtterance(t.replace(/\*/g,''));u.lang=NM[S.lang][2];speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+document.addEventListener('click',e=>{const x=e.target.closest('[data-say]');if(x)speak(x.dataset.say)});
+let ac;function beep(ok){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type='sine';o.frequency.value=ok?1040:220;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.start(t);o.stop(t+.1)}catch(e){}}
+let Q=[],qi=0,msg='Ready to learn? 🦊',cur='',inS=0,tt;
+const good=['Great job! 🎉','Perfect! ⭐','You rock!','Yes! Keep going! 🔥'],bad=['Almost! You will get it 💪','Mistakes help you learn 🌱'];
+function react(ok,pts){beep(ok);if(ok){S.score+=pts;save()}msg=sh(ok?good:bad)[0];const t=$('#toast');t.textContent='🦊 '+msg;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,1300);if(navigator.vibrate)navigator.vibrate(ok?20:[50,30,50])}
 const fox=m=>`<div class="fox"><b>🦊</b><span>${esc(m)}</span></div>`;
-const hdr=()=>`<div class="bar"><span>⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
-function home(){
- const d=D[S.lang];
- $('#app').innerHTML=hdr()+fox(msg)+`<div class="row">${Object.keys(D).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${D[k].flag} ${D[k].name}</button>`).join('')}</div>
- <h3>Lessons</h3>${lessons().map((l,i)=>`<button class="o" onclick="start(${i})">${l.title} ${S.done[S.lang+i]?'✅':''}<br><small class="mu">${l.w.length} words</small></button>`).join('')}
- <h3>Add your own word</h3><input id="t" placeholder="${d.name} word"><input id="p" placeholder="Pronunciation"><input id="e" placeholder="English meaning">
- <button class="o" onclick="addW()">➕ Add to "My words"</button>`;
-}
-function addW(){const t=$('#t').value.trim(),p=$('#p').value.trim(),e=$('#e').value.trim();if(!t||!e)return;S.custom[S.lang].push([t,p,e,'⭐']);save();msg='Word added! 🎉';home()}
-function start(i){
- const L=lessons()[i];cur=i;Q=[];
- L.w.forEach(w=>Q.push({k:'card',w}));
- sh(L.w).forEach(w=>Q.push({k:'quiz',w,L}));
- L.s.forEach(s=>Q.push({k:'build',s,L}));
- // revision: mixed
- sh([...L.w.map(w=>({k:'quiz',w,L,rev:1})),...L.s.map(s=>({k:'build',s,L,rev:1}))]).forEach(x=>Q.push(x));
- qi=0;step();
-}
+const hdr=()=>`<div class="bar"><span>${inS?'<button class="o sm" onclick="back()">←</button>':''}⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
+function back(){if(qi>0){qi--;step()}else home()}
+window.onpopstate=()=>{if(inS)home()};
+function home(){inS=0;const c=Object.entries((DATA[S.lang]||{})[S.lv]||{}),my=S.custom[S.lang];
+ $('#app').innerHTML=hdr()+fox(msg)+`<div class="row">${Object.keys(NM).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${NM[k][1]} ${NM[k][0]}</button>`).join('')}</div>
+ <div class="chips">${LV.map(l=>`<button class="${l==S.lv?'':'o'}" onclick="S.lv='${l}';save();home()">${l}</button>`).join('')}</div>
+ <h3>${S.lv} · Categories</h3>`+(c.length?c.map(([n,x])=>`<button class="o" onclick="start('${n}')">${ic(x.i)} ${n} ${S.done[S.lang+S.lv+n]?'✅':''}<br><small class="mu">${x.w.length} words</small></button>`).join(''):'<p class="mu">More words coming soon 🚧</p>')+
+ (my.length?`<button class="o" onclick="start('*')">⭐ My words (${my.length})</button>`:'')+
+ `<h3>Add your own word</h3><input id="t" placeholder="${NM[S.lang][0]} word"><input id="p" placeholder="Pronunciation"><input id="e" placeholder="English meaning"><button class="o" onclick="addW()">➕ Add to "My words"</button>`}
+function addW(){const t=$('#t').value.trim(),p=$('#p').value.trim(),e=$('#e').value.trim();if(!t||!e)return;S.custom[S.lang].push([t,p,e,'⭐',[]]);save();msg='Word added! 🎉';home()}
+function start(n){const W=n=='*'?S.custom[S.lang]:DATA[S.lang][S.lv][n].w;cur=S.lang+S.lv+n;inS=1;Q=[];history.pushState({},'');
+ W.forEach(w=>Q.push({k:'card',w}));
+ sh(W).forEach(w=>Q.push({k:'quiz',w,W}));
+ if(W.length>1){Q.push({k:'match',W,m:0});Q.push({k:'match',W,m:1})}
+ const ex=sh(W.flatMap(w=>w[4]||[])).slice(0,4).sort((a,b)=>tk(a[0]).length-tk(b[0]).length);
+ ex.forEach(s=>Q.push({k:'build',s,W}));
+ sh([...W.map(w=>({k:'quiz',w,W,rev:1})),...sh(ex).slice(0,2).map(s=>({k:'build',s,W,rev:1}))]).forEach(x=>Q.push(x));
+ qi=0;step()}
+function next(d){qi++;setTimeout(step,d)}
 function step(){
  if(qi>=Q.length)return finish();
- const q=Q[qi],pr=`<div class="prog"><i style="width:${qi/Q.length*100}%"></i></div>`;
- if(q.k=='card'){const[t,p,e,i]=q.w;speak(t);
-  $('#app').innerHTML=hdr()+pr+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${i}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" onclick="speak('${esc(t).replace(/'/g,"\\'")}')">🔊 Listen</button></div><button onclick="qi++;step()">Next →</button>`}
- if(q.k=='quiz'){const rev=Math.random()<.5,[t,p,e,i]=q.w,pool=sh(q.L.w.filter(x=>x!==q.w)).slice(0,3),opts=sh([q.w,...pool]);
-  $('#app').innerHTML=hdr()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${i}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
-  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const ok=b.dataset.r=='true';b.className=ok?'ok':'ko';document.querySelectorAll('[data-r]').forEach(x=>x.onclick=null);if(!ok)document.querySelector('[data-r=true]').className='ok';speak(t);react(ok,10);setTimeout(()=>{qi++;step()},ok?900:1600)})}
- if(q.k=='build'){const[ws,en]=q.s,extra=sh(q.L.w.map(w=>w[0]).filter(x=>!ws.includes(x))).slice(0,2);let bank=sh([...ws,...extra]).map((w,i)=>({w,i,u:0})),ans=[];
-  const draw=()=>{$('#app').innerHTML=hdr()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
+ const q=Q[qi],pr=`<div class="prog"><i style="width:${qi/Q.length*100}%"></i></div>`,H=hdr()+pr;
+ if(q.k=='card'){const[t,p,e,i,ex]=q.w;speak(t);
+  $('#app').innerHTML=H+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${ic(i)}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" data-say="${esc(t)}">🔊 Listen</button></div>`+
+  ((ex||[]).length?`<div class="card ex">${ex.map(([s,en])=>`<div data-say="${esc(s.replace(/\*/g,''))}">🔊 ${bold(s)}<br><small class="mu">${esc(en)}</small></div>`).join('')}</div>`:'')+`<button onclick="qi++;step()">Next →</button>`}
+ if(q.k=='quiz'){const rev=Math.random()<.5,[t,p,e,i]=q.w,opts=sh([q.w,...sh(q.W.filter(x=>x!==q.w)).slice(0,3)]);
+  $('#app').innerHTML=H+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${ic(i)}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const ok=b.dataset.r=='true';b.className=ok?'ok':'ko';document.querySelectorAll('[data-r]').forEach(x=>x.onclick=null);if(!ok)$('[data-r=true]').className='ok';speak(t);react(ok,10);next(ok?800:1500)})}
+ if(q.k=='match'){const P=sh(q.W).slice(0,5),R=sh(P),m=q.m;let L=null,n=0;
+  $('#app').innerHTML=H+`<div class="mu">Step 2 · Match game</div><h3>${m?'Match each word with its picture':'Match each word with its meaning'}</h3><div class="row"><div style="flex:1">${P.map((w,i)=>`<button class="o" data-l="${i}">${esc(w[0])}</button>`).join('')}</div><div style="flex:1">${R.map((w,i)=>`<button class="o" data-m="${i}">${m?ic(w[3]):esc(w[2])}</button>`).join('')}</div></div>`;
+  const bl=[...document.querySelectorAll('[data-l]')];
+  bl.forEach(b=>b.onclick=()=>{bl.forEach(x=>x.style.outline='');b.style.outline='3px solid var(--pr)';L=b;speak(P[b.dataset.l][0])});
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(!L)return;
+   if(P[L.dataset.l]===R[b.dataset.m]){[L,b].forEach(x=>{x.className='ok';x.onclick=null;x.style.outline=''});L=null;react(true,5);if(++n==P.length)next(700)}
+   else{b.className='ko';setTimeout(()=>b.className='o',500);react(false,0)}})}
+ if(q.k=='build'){const[s,en]=q.s,ws=tk(s),extra=sh(q.W.flatMap(w=>(w[4]||[]).flatMap(e=>tk(e[0]))).filter(x=>!ws.includes(x))).slice(0,2);
+  let bank=sh([...ws,...extra]).map((w,i)=>({w,i,u:0})),ans=[];
+  const draw=()=>{$('#app').innerHTML=H+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
    document.querySelectorAll('[data-b]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.b];b.u=1;ans.push(b);draw()});
    document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.a];b.u=0;ans=ans.filter(x=>x!==b);draw()});
-   $('#chk').onclick=()=>{const ok=ans.map(b=>b.w).join('|')==ws.join('|');speak(ws.join(' '));react(ok,15);if(ok)setTimeout(()=>{qi++;step()},1000);else{document.querySelector('.ans').insertAdjacentHTML('afterend',`<div class="card ko" style="color:#fff">Answer: ${esc(ws.join(' '))}</div>`);$('#chk').textContent='Continue →';$('#chk').onclick=()=>{qi++;step()}}}};
+   $('#chk').onclick=()=>{const ok=ans.map(b=>b.w).join(' ')==ws.join(' ');speak(s);react(ok,15);if(ok)next(900);else{$('.ans').insertAdjacentHTML('afterend',`<div class="card ko" style="color:#fff">${esc(ws.join(' '))}</div>`);$('#chk').textContent='Continue →';$('#chk').onclick=()=>{qi++;step()}}}};
   draw()}
 }
-const good=['Great job! 🎉','Perfect! ⭐','You rock! 🦊','Yes! Keep going! 🔥'],bad=['Almost! Try to remember it 💪','No worries, mistakes help you learn! 🌱'];
-function react(ok,pts){beep(ok);if(ok){S.score+=pts;save()}msg=sh(ok?good:bad)[0];if(navigator.vibrate)navigator.vibrate(ok?30:[60,40,60])}
 function finish(){
  const t=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
  if(S.last!=t){S.streak=S.last==y?S.streak+1:1;S.last=t}
- S.done[S.lang+cur]=1;S.score+=20;save();beep(true);msg='Lesson complete! +20 ⭐ See you tomorrow!';
- $('#app').innerHTML=hdr()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`;
-}
+ S.done[cur]=1;S.score+=20;save();beep(true);inS=0;msg='Lesson complete! +20 ⭐';
+ $('#app').innerHTML=hdr()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`}
 home();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
