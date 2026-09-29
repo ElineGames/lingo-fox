@@ -512,9 +512,16 @@
   let flashcardQueue = [];
   let currentFlashcardItem = null;
 
+  let wordsLearnedCount = 0;
+  let recentLearnedWords = []; // Stocke la série de 5 mots
+  let quizBatchQueue = [];     // Liste des 5 quiz à enchaîner
+  let currentQuizTarget = null;
+  let quizTimerInterval = null;
+  let quizTimeLeft = 20;
+
   function speakText(text, langCode) {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop previous audio
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = langCode === 'de' ? 'de-DE' : 'th-TH';
       window.speechSynthesis.speak(utterance);
@@ -526,11 +533,7 @@
     document.getElementById('userScore').innerText = userScore;
   }
 
-  // --- VARIABLES DUOLINGO & QUIZ ---
-  let wordsLearnedCount = 0;
-  let recentLearnedWords = []; // Stocke les 5 derniers mots validés
-  let currentQuizTarget = null;
-
+  // --- FLASHCARDS & SÉRIE DE 5 QUIZ ---
   function initFlashcardQueue() {
     const level = document.getElementById('levelSelect').value;
     const cat = document.getElementById('categorySelect').value;
@@ -538,6 +541,9 @@
     flashcardQueue = [...words];
     wordsLearnedCount = 0;
     recentLearnedWords = [];
+    quizBatchQueue = [];
+    clearInterval(quizTimerInterval);
+    
     document.getElementById('flashcardCardMode').style.display = 'block';
     document.getElementById('flashcardQuizMode').style.display = 'none';
     renderFlashcard();
@@ -549,6 +555,7 @@
 
     document.getElementById('flashcardCardMode').style.display = 'block';
     document.getElementById('flashcardQuizMode').style.display = 'none';
+    clearInterval(quizTimerInterval);
 
     if (flashcardQueue.length === 0) {
       progress.innerText = "";
@@ -597,15 +604,17 @@
       addPoints(10);
       const learned = flashcardQueue.shift();
       wordsLearnedCount++;
-
-      // Ajouter aux récents (garder les 5 derniers max)
       recentLearnedWords.push(learned);
-      if (recentLearnedWords.length > 5) recentLearnedWords.shift();
 
-      // Vérifier si c'est le moment de lancer le Quiz (tous les 5 mots)
-      if (wordsLearnedCount % 5 === 0 && recentLearnedWords.length >= 4) {
-        startCheckpointQuiz();
-        return;
+      // Si on a appris 5 mots (ou si la file est vide mais qu'on a révisé des mots)
+      if (recentLearnedWords.length === 5 || flashcardQueue.length === 0) {
+        if (recentLearnedWords.length >= 2) {
+          quizBatchQueue = [...recentLearnedWords];
+          // Mélanger l'ordre des 5 quiz
+          quizBatchQueue.sort(() => Math.random() - 0.5);
+          startNextQuizInBatch();
+          return;
+        }
       }
     } else {
       const failedItem = flashcardQueue.shift();
@@ -614,23 +623,38 @@
     renderFlashcard();
   }
 
-  // --- LOGIQUE DU QUIZ CHECKPOINT ---
-  function startCheckpointQuiz() {
+  // --- LOGIQUE DES QUIZ AVEC MINUTEUR (20s) ---
+  function startNextQuizInBatch() {
+    if (quizBatchQueue.length === 0) {
+      // Fin de la série de 5 quiz
+      recentLearnedWords = [];
+      renderFlashcard();
+      return;
+    }
+
     document.getElementById('flashcardCardMode').style.display = 'none';
     document.getElementById('flashcardQuizMode').style.display = 'block';
     document.getElementById('quizFeedback').innerText = '';
 
-    // Tirer au sort une cible parmi les mots récents
-    currentQuizTarget = recentLearnedWords[Math.floor(Math.random() * recentLearnedWords.length)];
+    currentQuizTarget = quizBatchQueue.shift();
 
     document.getElementById('quizEnglishWord').innerHTML = `
+      <div style="font-size:12px; color:#888;">Quiz (${5 - quizBatchQueue.length}/5)</div>
       <div style="font-size:50px;">${currentQuizTarget.icon}</div>
       <div>"${currentQuizTarget.translation}"</div>
+      <div id="quizTimer" style="font-size:18px; font-weight:bold; color:#ef4444; margin-top:6px;">⏱️ 20s</div>
     `;
 
-    // Préparer les 4 options
-    let options = [...recentLearnedWords];
-    // Mélanger les options
+    // Préparer les 4 options (la cible + d'autres mots récents/disponibles)
+    let pool = [...recentLearnedWords];
+    let options = [currentQuizTarget];
+
+    for (let item of pool) {
+      if (options.length >= 4) break;
+      if (item.id !== currentQuizTarget.id && !options.some(o => o.id === item.id)) {
+        options.push(item);
+      }
+    }
     options.sort(() => Math.random() - 0.5);
 
     const grid = document.getElementById('quizOptionsGrid');
@@ -640,27 +664,50 @@
       btn.className = 'nav-btn';
       btn.style.padding = '12px';
       btn.style.fontSize = '16px';
-      btn.innerText = item.word;
+      btn.innerText = item.word.replace(/<[^>]*>?/gm, '');
       btn.onclick = () => checkQuizAnswer(item, btn);
       grid.appendChild(btn);
     });
+
+    // Lancer le minuteur de 20s
+    quizTimeLeft = 20;
+    clearInterval(quizTimerInterval);
+    quizTimerInterval = setInterval(() => {
+      quizTimeLeft--;
+      const timerEl = document.getElementById('quizTimer');
+      if (timerEl) timerEl.innerText = `⏱️ ${quizTimeLeft}s`;
+      if (quizTimeLeft <= 0) {
+        clearInterval(quizTimerInterval);
+        const feedback = document.getElementById('quizFeedback');
+        feedback.style.color = '#ef4444';
+        feedback.innerText = '⏰ Time\'s up!';
+        setTimeout(() => {
+          startNextQuizInBatch();
+        }, 1200);
+      }
+    }, 1000);
   }
 
   function checkQuizAnswer(selectedItem, btnElement) {
+    clearInterval(quizTimerInterval);
     const feedback = document.getElementById('quizFeedback');
-    if (selectedItem.id === currentQuizTarget.id) {
+    
+    if (selectedItem.id === currentQuizTarget.id || selectedItem.word === currentQuizTarget.word) {
       playSuccessSound();
       addPoints(15);
       feedback.style.color = '#10b981';
       feedback.innerText = '✨ Great job! (+15 pts)';
       speakText(selectedItem.word.replace(/<[^>]*>?/gm, ''), currentLang);
       setTimeout(() => {
-        renderFlashcard();
+        startNextQuizInBatch();
       }, 1200);
     } else {
       feedback.style.color = '#ef4444';
-      feedback.innerText = '❌ Try again!';
+      feedback.innerText = `❌ Wrong! (Correct: ${currentQuizTarget.word.replace(/<[^>]*>?/gm, '')})`;
       btnElement.style.borderColor = '#ef4444';
+      setTimeout(() => {
+        startNextQuizInBatch();
+      }, 1800);
     }
   }
 </script>
