@@ -181,13 +181,25 @@
   </div>
 </div>
 
-  <!-- FLASHCARDS MODE (Duolingo Style with Audio & Loop) -->
+ <!-- FLASHCARDS MODE (Cards + Quiz every 5 words) -->
   <div class="card" id="flashcardView" style="display:none; text-align:center;">
     <div id="flashcardProgress" style="font-size: 12px; color: #666; margin-bottom: 8px;"></div>
-    <div id="flashcardContent"></div>
-    <div style="display:flex; gap:10px; margin-top:16px;">
-      <button class="action-btn" style="flex:1; background-color: #ef4444;" onclick="answerFlashcard(false)">❌ Repeat later</button>
-      <button class="action-btn" style="flex:1; background-color: #10b981;" onclick="answerFlashcard(true)">✅ Got it (+10 pts)</button>
+    
+    <!-- Mode Carte classique -->
+    <div id="flashcardCardMode">
+      <div id="flashcardContent"></div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button class="action-btn" style="flex:1; background-color: #ef4444;" onclick="answerFlashcard(false)">❌ Repeat later</button>
+        <button class="action-btn" style="flex:1; background-color: #10b981;" onclick="answerFlashcard(true)">✅ Got it (+10 pts)</button>
+      </div>
+    </div>
+
+    <!-- Mode Quiz Checkpoint (Tous les 5 mots) -->
+    <div id="flashcardQuizMode" style="display:none;">
+      <div style="font-size: 14px; color: #3b82f6; font-weight: bold; margin-bottom: 8px;">🎯 Checkpoint Quiz</div>
+      <div id="quizEnglishWord" style="font-size: 22px; font-weight: bold; margin-bottom: 12px;"></div>
+      <div id="quizOptionsGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;"></div>
+      <div id="quizFeedback" style="margin-top: 12px; font-weight: bold;"></div>
     </div>
   </div>
   
@@ -514,18 +526,29 @@
     document.getElementById('userScore').innerText = userScore;
   }
 
-  // --- LOGIQUE FLASHCARDS TYPE DUOLINGO ---
+  // --- VARIABLES DUOLINGO & QUIZ ---
+  let wordsLearnedCount = 0;
+  let recentLearnedWords = []; // Stocke les 5 derniers mots validés
+  let currentQuizTarget = null;
+
   function initFlashcardQueue() {
     const level = document.getElementById('levelSelect').value;
     const cat = document.getElementById('categorySelect').value;
     const words = (appData[currentLang].levels[level] && appData[currentLang].levels[level][cat]) || [];
     flashcardQueue = [...words];
+    wordsLearnedCount = 0;
+    recentLearnedWords = [];
+    document.getElementById('flashcardCardMode').style.display = 'block';
+    document.getElementById('flashcardQuizMode').style.display = 'none';
     renderFlashcard();
   }
 
   function renderFlashcard() {
     const container = document.getElementById('flashcardContent');
     const progress = document.getElementById('flashcardProgress');
+
+    document.getElementById('flashcardCardMode').style.display = 'block';
+    document.getElementById('flashcardQuizMode').style.display = 'none';
 
     if (flashcardQueue.length === 0) {
       progress.innerText = "";
@@ -541,7 +564,7 @@
     progress.innerText = `Remaining in loop: ${flashcardQueue.length} word(s)`;
     currentFlashcardItem = flashcardQueue[0];
 
-    // Auto-play audio on display
+    // Audio automatique
     speakText(currentFlashcardItem.word.replace(/<[^>]*>?/gm, ''), currentLang);
 
     container.innerHTML = `
@@ -572,13 +595,73 @@
     if (isCorrect) {
       playSuccessSound();
       addPoints(10);
-      flashcardQueue.shift(); // Retire le mot réussi
+      const learned = flashcardQueue.shift();
+      wordsLearnedCount++;
+
+      // Ajouter aux récents (garder les 5 derniers max)
+      recentLearnedWords.push(learned);
+      if (recentLearnedWords.length > 5) recentLearnedWords.shift();
+
+      // Vérifier si c'est le moment de lancer le Quiz (tous les 5 mots)
+      if (wordsLearnedCount % 5 === 0 && recentLearnedWords.length >= 4) {
+        startCheckpointQuiz();
+        return;
+      }
     } else {
-      // Déplace le mot raté à la fin de la file pour révision
       const failedItem = flashcardQueue.shift();
       flashcardQueue.push(failedItem);
     }
     renderFlashcard();
+  }
+
+  // --- LOGIQUE DU QUIZ CHECKPOINT ---
+  function startCheckpointQuiz() {
+    document.getElementById('flashcardCardMode').style.display = 'none';
+    document.getElementById('flashcardQuizMode').style.display = 'block';
+    document.getElementById('quizFeedback').innerText = '';
+
+    // Tirer au sort une cible parmi les mots récents
+    currentQuizTarget = recentLearnedWords[Math.floor(Math.random() * recentLearnedWords.length)];
+
+    document.getElementById('quizEnglishWord').innerHTML = `
+      <div style="font-size:50px;">${currentQuizTarget.icon}</div>
+      <div>"${currentQuizTarget.translation}"</div>
+    `;
+
+    // Préparer les 4 options
+    let options = [...recentLearnedWords];
+    // Mélanger les options
+    options.sort(() => Math.random() - 0.5);
+
+    const grid = document.getElementById('quizOptionsGrid');
+    grid.innerHTML = '';
+    options.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn';
+      btn.style.padding = '12px';
+      btn.style.fontSize = '16px';
+      btn.innerText = item.word;
+      btn.onclick = () => checkQuizAnswer(item, btn);
+      grid.appendChild(btn);
+    });
+  }
+
+  function checkQuizAnswer(selectedItem, btnElement) {
+    const feedback = document.getElementById('quizFeedback');
+    if (selectedItem.id === currentQuizTarget.id) {
+      playSuccessSound();
+      addPoints(15);
+      feedback.style.color = '#10b981';
+      feedback.innerText = '✨ Great job! (+15 pts)';
+      speakText(selectedItem.word.replace(/<[^>]*>?/gm, ''), currentLang);
+      setTimeout(() => {
+        renderFlashcard();
+      }, 1200);
+    } else {
+      feedback.style.color = '#ef4444';
+      feedback.innerText = '❌ Try again!';
+      btnElement.style.borderColor = '#ef4444';
+    }
   }
 </script>
 </body>
