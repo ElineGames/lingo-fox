@@ -176,6 +176,23 @@
   </div>
 </div>
 
+  <!-- MODE CARTES (Un mot à la fois) -->
+  <div class="card" id="flashcardView" style="display:none; text-align:center;">
+    <div id="flashcardContent"></div>
+    <div style="display:flex; justify-between; gap:10px; margin-top:16px;">
+      <button class="nav-btn" style="flex:1;" onclick="prevFlashcard()">⬅️ Précédent</button>
+      <button class="action-btn" style="flex:1; margin-top:0;" onclick="nextFlashcard()">Suivant ➡️</button>
+    </div>
+  </div>
+
+  <!-- MODE CLAVIER (Rédaction libre) -->
+  <div class="card" id="typingView" style="display:none;">
+    <h3 id="typingTargetEnglish"></h3>
+    <input type="text" id="typingInput" placeholder="Écris la phrase ici..." style="width:100%; padding:12px; font-size:16px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:12px;">
+    <button class="action-btn" onclick="checkTypingAnswer()">Vérifier</button>
+    <div id="typingFeedback" style="margin-top:10px; font-weight:bold;"></div>
+  </div>
+  
 <script src="data.js"></script>
 <script>
   let currentLang = 'de';
