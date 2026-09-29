@@ -1,96 +1,390 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5"><link rel="manifest" href="manifest.json"><title>Lingo Fox</title>
-<style>
-:root{--bg:#f5f3ff;--card:#fff;--tx:#1e1b4b;--pr:#4f46e5;--ok:#16a34a;--ko:#dc2626;--mu:#6b7280}
-@media(prefers-color-scheme:dark){:root{--bg:#12102b;--card:#1e1b4b;--tx:#eef;--mu:#a5b4fc}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-#app{max-width:480px;margin:auto;padding:14px;min-height:100vh}
-.bar{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:8px}
-.fox{display:flex;gap:10px;align-items:center;margin:8px 0 14px}
-.fox b{font-size:44px}.fox span{background:var(--card);border-radius:14px;padding:10px 12px;font-size:15px;flex:1}
-.card{background:var(--card);border-radius:18px;padding:18px;text-align:center;margin-bottom:12px;box-shadow:0 2px 8px #0002}
-.big{font-size:64px}.tg{font-size:34px;font-weight:700}.mu{color:var(--mu)}.im{height:1em;vertical-align:middle}
-button{font:inherit;border:0;border-radius:14px;padding:14px;background:var(--pr);color:#fff;font-weight:600;width:100%;margin:5px 0;min-height:48px}
-button.o{background:var(--card);color:var(--tx);border:2px solid #8884}
-button.ok{background:var(--ok);color:#fff}button.ko{background:var(--ko);color:#fff}
-button.sm{width:auto;min-height:0;padding:6px 14px;margin:0 8px 0 0}
-.row{display:flex;gap:8px}.row button{flex:1}
-.chips{display:flex;gap:6px;margin-top:10px}.chips button{padding:8px 0;min-height:0;margin:0}
-.blocks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:56px;padding:8px}
-.blocks button{width:auto;margin:0;font-size:20px;padding:10px 14px}
-.ans{border-bottom:3px dashed #8886;margin-bottom:14px}
-.prog{height:8px;background:#8883;border-radius:8px;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--pr);border-radius:8px}
-.ex div{text-align:left;padding:8px 0;border-bottom:1px solid #8883}.ex b{color:#d97706}
-input{font:inherit;width:100%;padding:12px;margin:4px 0;border-radius:10px;border:2px solid #8884;background:var(--card);color:var(--tx)}
-h3{margin:14px 0 6px}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);padding:10px 16px;border-radius:20px;box-shadow:0 2px 10px #0005;opacity:0;transition:.2s;pointer-events:none;z-index:9}
-</style></head><body><div id="app"></div><div id="toast"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolyGlot Master</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --primary: #4f46e5;
+      --accent: #10b981;
+      --text: #1f2937;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { width: 100%; max-width: 500px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .nav-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    button.nav-btn {
+      background: #e0e7ff;
+      color: var(--primary);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    select {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 16px;
+    }
+    .vocab-card {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+    }
+    .vocab-card:last-child { border-bottom: none; margin-bottom: 0; }
+    .vocab-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .vocab-icon { font-size: 36px; }
+    .vocab-word { font-size: 20px; font-weight: bold; color: var(--primary); }
+    .vocab-phonetic { font-size: 13px; color: #6b7280; }
+    .examples-list {
+      background: #f9fafb;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .examples-list li { margin-bottom: 6px; }
+    .examples-list li:last-child { margin-bottom: 0; }
+    .example-en { font-size: 12px; color: #6b7280; display: block; }
+    .matching-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .match-btn {
+      background: #f3f4f6;
+      border: 2px solid #e5e7eb;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .match-btn.selected { border-color: var(--primary); background: #e0e7ff; }
+    .match-btn.matched { visibility: hidden; }
+    .sentence-box {
+      min-height: 48px;
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px;
+      margin-bottom: 12px;
+    }
+    .word-pool { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      background: #e0e7ff;
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chip.selected { opacity: 0.3; }
+    button.action-btn {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h2>PolyGlot 🦊</h2>
+    <select id="langSelect" onchange="changeLanguage(this.value)">
+      <option value="de">German 🇩🇪</option>
+      <option value="th">Thai 🇹🇭</option>
+    </select>
+  </header>
+
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setView('vocab')">📖 Learn</button>
+    <button class="nav-btn" onclick="setView('matching')">🧩 Match Game</button>
+    <button class="nav-btn" onclick="setView('sentence')">✍️ Sentences</button>
+  </div>
+
+  <div class="card" id="filterBar">
+    <label>Level: </label>
+    <select id="levelSelect" onchange="renderCurrentView()"></select>
+    <label style="margin-left:10px;">Category: </label>
+    <select id="categorySelect" onchange="renderCurrentView()"></select>
+  </div>
+
+  <div class="card" id="vocabView"></div>
+
+  <div class="card" id="matchingView" style="display:none;">
+    <h3>Match Word with Icon/Translation</h3>
+    <p style="font-size: 13px; color: #6b7280;">Select a word on the left, then its match on the right!</p>
+    <div class="matching-grid">
+      <div id="leftColumn"></div>
+      <div id="rightColumn"></div>
+    </div>
+  </div>
+
+  <div class="card" id="sentenceView" style="display:none;">
+    <h3 id="targetEnglish"></h3>
+    <div id="constructedSentence" class="sentence-box"></div>
+    <div id="wordPool" class="word-pool"></div>
+    <button class="action-btn" onclick="checkSentence()">Check Answer</button>
+    <div id="feedback" style="margin-top:10px; font-weight:bold;"></div>
+  </div>
+</div>
+
 <script src="data.js"></script>
 <script>
-const LV=['A1','A2','B1','B2','C1','C2'],NM={de:['German','🇩🇪','de-DE'],th:['Thai','🇹🇭','th-TH']};
-let S=Object.assign({lang:'de',lv:'A1',score:0,streak:0,last:'',custom:{de:[],th:[]},done:{}},JSON.parse(localStorage.getItem('lf1')||'{}'));
-const save=()=>localStorage.setItem('lf1',JSON.stringify(S));
-const $=s=>document.querySelector(s),sh=a=>[...a].sort(()=>Math.random()-.5);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
-const ic=i=>/\.(png|jpe?g|svg|webp)$/i.test(i)?`<img class="im" src="img/${i}">`:i;
-const tk=s=>s.replace(/\*/g,'').split(' '),bold=s=>esc(s).replace(/\*(.+?)\*/g,'<b>$1</b>');
-function speak(t){try{const u=new SpeechSynthesisUtterance(t.replace(/\*/g,''));u.lang=NM[S.lang][2];speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
-document.addEventListener('click',e=>{const x=e.target.closest('[data-say]');if(x)speak(x.dataset.say)});
-let ac;function beep(ok){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.type='sine';o.frequency.value=ok?1040:220;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.start(t);o.stop(t+.1)}catch(e){}}
-let Q=[],qi=0,msg='Ready to learn? 🦊',cur='',inS=0,tt;
-const good=['Great job! 🎉','Perfect! ⭐','You rock!','Yes! Keep going! 🔥'],bad=['Almost! You will get it 💪','Mistakes help you learn 🌱'];
-function react(ok,pts){beep(ok);if(ok){S.score+=pts;save()}msg=sh(ok?good:bad)[0];const t=$('#toast');t.textContent='🦊 '+msg;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,1300);if(navigator.vibrate)navigator.vibrate(ok?20:[50,30,50])}
-const fox=m=>`<div class="fox"><b>🦊</b><span>${esc(m)}</span></div>`;
-const hdr=()=>`<div class="bar"><span>${inS?'<button class="o sm" onclick="back()">←</button>':''}⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
-function back(){if(qi>0){qi--;step()}else home()}
-window.onpopstate=()=>{if(inS)home()};
-function home(){inS=0;const c=Object.entries((DATA[S.lang]||{})[S.lv]||{}),my=S.custom[S.lang];
- $('#app').innerHTML=hdr()+fox(msg)+`<div class="row">${Object.keys(NM).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${NM[k][1]} ${NM[k][0]}</button>`).join('')}</div>
- <div class="chips">${LV.map(l=>`<button class="${l==S.lv?'':'o'}" onclick="S.lv='${l}';save();home()">${l}</button>`).join('')}</div>
- <h3>${S.lv} · Categories</h3>`+(c.length?c.map(([n,x])=>`<button class="o" onclick="start('${n}')">${ic(x.i)} ${n} ${S.done[S.lang+S.lv+n]?'✅':''}<br><small class="mu">${x.w.length} words</small></button>`).join(''):'<p class="mu">More words coming soon 🚧</p>')+
- (my.length?`<button class="o" onclick="start('*')">⭐ My words (${my.length})</button>`:'')+
- `<h3>Add your own word</h3><input id="t" placeholder="${NM[S.lang][0]} word"><input id="p" placeholder="Pronunciation"><input id="e" placeholder="English meaning"><button class="o" onclick="addW()">➕ Add to "My words"</button>`}
-function addW(){const t=$('#t').value.trim(),p=$('#p').value.trim(),e=$('#e').value.trim();if(!t||!e)return;S.custom[S.lang].push([t,p,e,'⭐',[]]);save();msg='Word added! 🎉';home()}
-function start(n){const W=n=='*'?S.custom[S.lang]:DATA[S.lang][S.lv][n].w;cur=S.lang+S.lv+n;inS=1;Q=[];history.pushState({},'');
- W.forEach(w=>Q.push({k:'card',w}));
- sh(W).forEach(w=>Q.push({k:'quiz',w,W}));
- if(W.length>1){Q.push({k:'match',W,m:0});Q.push({k:'match',W,m:1})}
- const ex=sh(W.flatMap(w=>w[4]||[])).slice(0,4).sort((a,b)=>tk(a[0]).length-tk(b[0]).length);
- ex.forEach(s=>Q.push({k:'build',s,W}));
- sh([...W.map(w=>({k:'quiz',w,W,rev:1})),...sh(ex).slice(0,2).map(s=>({k:'build',s,W,rev:1}))]).forEach(x=>Q.push(x));
- qi=0;step()}
-function next(d){qi++;setTimeout(step,d)}
-function step(){
- if(qi>=Q.length)return finish();
- const q=Q[qi],pr=`<div class="prog"><i style="width:${qi/Q.length*100}%"></i></div>`,H=hdr()+pr;
- if(q.k=='card'){const[t,p,e,i,ex]=q.w;speak(t);
-  $('#app').innerHTML=H+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${ic(i)}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" data-say="${esc(t)}">🔊 Listen</button></div>`+
-  ((ex||[]).length?`<div class="card ex">${ex.map(([s,en])=>`<div data-say="${esc(s.replace(/\*/g,''))}">🔊 ${bold(s)}<br><small class="mu">${esc(en)}</small></div>`).join('')}</div>`:'')+`<button onclick="qi++;step()">Next →</button>`}
- if(q.k=='quiz'){const rev=Math.random()<.5,[t,p,e,i]=q.w,opts=sh([q.w,...sh(q.W.filter(x=>x!==q.w)).slice(0,3)]);
-  $('#app').innerHTML=H+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${ic(i)}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
-  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const ok=b.dataset.r=='true';b.className=ok?'ok':'ko';document.querySelectorAll('[data-r]').forEach(x=>x.onclick=null);if(!ok)$('[data-r=true]').className='ok';speak(t);react(ok,10);next(ok?800:1500)})}
- if(q.k=='match'){const P=sh(q.W).slice(0,5),R=sh(P),m=q.m;let L=null,n=0;
-  $('#app').innerHTML=H+`<div class="mu">Step 2 · Match game</div><h3>${m?'Match each word with its picture':'Match each word with its meaning'}</h3><div class="row"><div style="flex:1">${P.map((w,i)=>`<button class="o" data-l="${i}">${esc(w[0])}</button>`).join('')}</div><div style="flex:1">${R.map((w,i)=>`<button class="o" data-m="${i}">${m?ic(w[3]):esc(w[2])}</button>`).join('')}</div></div>`;
-  const bl=[...document.querySelectorAll('[data-l]')];
-  bl.forEach(b=>b.onclick=()=>{bl.forEach(x=>x.style.outline='');b.style.outline='3px solid var(--pr)';L=b;speak(P[b.dataset.l][0])});
-  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(!L)return;
-   if(P[L.dataset.l]===R[b.dataset.m]){[L,b].forEach(x=>{x.className='ok';x.onclick=null;x.style.outline=''});L=null;react(true,5);if(++n==P.length)next(700)}
-   else{b.className='ko';setTimeout(()=>b.className='o',500);react(false,0)}})}
- if(q.k=='build'){const[s,en]=q.s,ws=tk(s),extra=sh(q.W.flatMap(w=>(w[4]||[]).flatMap(e=>tk(e[0]))).filter(x=>!ws.includes(x))).slice(0,2);
-  let bank=sh([...ws,...extra]).map((w,i)=>({w,i,u:0})),ans=[];
-  const draw=()=>{$('#app').innerHTML=H+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
-   document.querySelectorAll('[data-b]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.b];b.u=1;ans.push(b);draw()});
-   document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.a];b.u=0;ans=ans.filter(x=>x!==b);draw()});
-   $('#chk').onclick=()=>{const ok=ans.map(b=>b.w).join(' ')==ws.join(' ');speak(s);react(ok,15);if(ok)next(900);else{$('.ans').insertAdjacentHTML('afterend',`<div class="card ko" style="color:#fff">${esc(ws.join(' '))}</div>`);$('#chk').textContent='Continue →';$('#chk').onclick=()=>{qi++;step()}}}};
-  draw()}
-}
-function finish(){
- const t=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
- if(S.last!=t){S.streak=S.last==y?S.streak+1:1;S.last=t}
- S.done[cur]=1;S.score+=20;save();beep(true);inS=0;msg='Lesson complete! +20 ⭐';
- $('#app').innerHTML=hdr()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`}
-home();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
-</script></body></html>
+  let currentLang = 'de';
+  let currentView = 'vocab';
+  let selectedLeft = null;
+  let selectedWords = [];
+  let currentSentenceIdx = 0;
+
+  function playSuccessSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+      
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {}
+  }
+
+  function initApp() {
+    populateFilters();
+    renderCurrentView();
+  }
+
+  function changeLanguage(lang) {
+    currentLang = lang;
+    populateFilters();
+    renderCurrentView();
+  }
+
+  function populateFilters() {
+    const levels = Object.keys(appData[currentLang].levels);
+    const levelSelect = document.getElementById('levelSelect');
+    levelSelect.innerHTML = levels.map(l => `<option value="${l}">${l}</option>`).join('');
+    updateCategories();
+  }
+
+  function updateCategories() {
+    const level = document.getElementById('levelSelect').value;
+    const categories = Object.keys(appData[currentLang].levels[level] || {});
+    const catSelect = document.getElementById('categorySelect');
+    catSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  }
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('vocabView').style.display = view === 'vocab' ? 'block' : 'none';
+    document.getElementById('matchingView').style.display = view === 'matching' ? 'block' : 'none';
+    document.getElementById('sentenceView').style.display = view === 'sentence' ? 'block' : 'none';
+    document.getElementById('filterBar').style.display = view === 'sentence' ? 'none' : 'block';
+    renderCurrentView();
+  }
+
+  function renderCurrentView() {
+    if (currentView === 'vocab') renderVocab();
+    else if (currentView === 'matching') renderMatchingGame();
+    else if (currentView === 'sentence') renderSentence();
+  }
+
+  function renderVocab() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = (appData[currentLang].levels[level] && appData[currentLang].levels[level][cat]) || [];
+
+    const container = document.getElementById('vocabView');
+    container.innerHTML = words.map(item => `
+      <div class="vocab-card">
+        <div class="vocab-header">
+          <span class="vocab-icon">${item.icon}</span>
+          <div>
+            <div class="vocab-word">${item.word}</div>
+            <div class="vocab-phonetic">[${item.phonetic}] — ${item.translation}</div>
+          </div>
+        </div>
+        <ul class="examples-list">
+          ${item.examples.map(ex => `
+            <li>
+              ${ex.target}
+              <span class="example-en">${ex.english}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+
+  function renderMatchingGame() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = (appData[currentLang].levels[level] && appData[currentLang].levels[level][cat]) || [];
+
+    const leftCol = document.getElementById('leftColumn');
+    const rightCol = document.getElementById('rightColumn');
+    leftCol.innerHTML = '';
+    rightCol.innerHTML = '';
+
+    const shuffledRight = [...words].sort(() => Math.random() - 0.5);
+
+    words.forEach(item => {
+      const btn = document.createElement('div');
+      btn.className = 'match-btn';
+      btn.innerText = item.word;
+      btn.dataset.id = item.id;
+      btn.onclick = () => selectLeft(btn);
+      leftCol.appendChild(btn);
+    });
+
+    shuffledRight.forEach(item => {
+      const btn = document.createElement('div');
+      btn.className = 'match-btn';
+      btn.innerText = `${item.icon} ${item.translation}`;
+      btn.dataset.id = item.id;
+      btn.onclick = () => checkMatch(btn);
+      rightCol.appendChild(btn);
+    });
+  }
+
+  function selectLeft(btn) {
+    document.querySelectorAll('#leftColumn .match-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedLeft = btn;
+  }
+
+  function checkMatch(rightBtn) {
+    if (!selectedLeft) return;
+    if (selectedLeft.dataset.id === rightBtn.dataset.id) {
+      playSuccessSound();
+      selectedLeft.classList.add('matched');
+      rightBtn.classList.add('matched');
+      selectedLeft = null;
+    } else {
+      rightBtn.style.borderColor = '#ef4444';
+      setTimeout(() => rightBtn.style.borderColor = '#e5e7eb', 500);
+    }
+  }
+
+  function renderSentence() {
+    const sentenceData = appData[currentLang].sentences[currentSentenceIdx];
+    document.getElementById('targetEnglish').innerText = `"${sentenceData.english}"`;
+    selectedWords = [];
+    updateSentenceDisplay();
+
+    const pool = document.getElementById('wordPool');
+    pool.innerHTML = '';
+    sentenceData.words.forEach(word => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerText = word;
+      chip.onclick = () => {
+        if (chip.classList.contains('selected')) return;
+        chip.classList.add('selected');
+        selectedWords.push({ word, element: chip });
+        updateSentenceDisplay();
+      };
+      pool.appendChild(chip);
+    });
+  }
+
+  function updateSentenceDisplay() {
+    const box = document.getElementById('constructedSentence');
+    box.innerHTML = '';
+    selectedWords.forEach((item, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerText = item.word;
+      chip.onclick = () => {
+        item.element.classList.remove('selected');
+        selectedWords.splice(idx, 1);
+        updateSentenceDisplay();
+      };
+      box.appendChild(chip);
+    });
+  }
+
+  function checkSentence() {
+    const sentenceData = appData[currentLang].sentences[currentSentenceIdx];
+    const userAttempt = selectedWords.map(w => w.word).join(' ');
+    const correctTarget = sentenceData.correctOrder.join(' ');
+    const feedback = document.getElementById('feedback');
+
+    if (userAttempt === correctTarget) {
+      playSuccessSound();
+      feedback.style.color = '#10b981';
+      feedback.innerText = '✨ Excellent!';
+      setTimeout(() => {
+        currentSentenceIdx = (currentSentenceIdx + 1) % appData[currentLang].sentences.length;
+        feedback.innerText = '';
+        renderSentence();
+      }, 1200);
+    } else {
+      feedback.style.color = '#ef4444';
+      feedback.innerText = '❌ Try again!';
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  document.getElementById('levelSelect').addEventListener('change', updateCategories);
+  window.onload = initApp;
+</script>
+</body>
+</html>
