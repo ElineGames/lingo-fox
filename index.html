@@ -141,12 +141,17 @@
     </select>
   </header>
 
- <div class="nav-bar">
-    <button class="nav-btn" onclick="setView('vocab')">📖 Leçons</button>
-    <button class="nav-btn" onclick="setView('flashcards')">🎴 Cartes</button>
-    <button class="nav-btn" onclick="setView('matching')">🧩 Relier</button>
-    <button class="nav-btn" onclick="setView('sentence')">🧱 Mots-clés</button>
-    <button class="nav-btn" onclick="setView('typing')">⌨️ Clavier</button>
+<!-- Score Display -->
+  <div id="scoreBoard" style="text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 12px; color: #10b981;">
+    ⭐ Score: <span id="userScore">0</span> pts
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setView('vocab')">📖 Lessons</button>
+    <button class="nav-btn" onclick="setView('flashcards')">🎴 Flashcards</button>
+    <button class="nav-btn" onclick="setView('matching')">🧩 Match</button>
+    <button class="nav-btn" onclick="setView('sentence')">🧱 Reorder</button>
+    <button class="nav-btn" onclick="setView('typing')">⌨️ Type</button>
   </div>
 
   <div class="card" id="filterBar">
@@ -176,15 +181,16 @@
   </div>
 </div>
 
-  <!-- MODE CARTES (Un mot à la fois) -->
+  <!-- FLASHCARDS MODE (Duolingo Style with Audio & Loop) -->
   <div class="card" id="flashcardView" style="display:none; text-align:center;">
+    <div id="flashcardProgress" style="font-size: 12px; color: #666; margin-bottom: 8px;"></div>
     <div id="flashcardContent"></div>
-    <div style="display:flex; justify-between; gap:10px; margin-top:16px;">
-      <button class="nav-btn" style="flex:1;" onclick="prevFlashcard()">⬅️ Précédent</button>
-      <button class="action-btn" style="flex:1; margin-top:0;" onclick="nextFlashcard()">Suivant ➡️</button>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="action-btn" style="flex:1; background-color: #ef4444;" onclick="answerFlashcard(false)">❌ Repeat later</button>
+      <button class="action-btn" style="flex:1; background-color: #10b981;" onclick="answerFlashcard(true)">✅ Got it (+10 pts)</button>
     </div>
   </div>
-
+  
   <!-- MODE CLAVIER (Rédaction libre) -->
   <div class="card" id="typingView" style="display:none;">
     <h3 id="typingTargetEnglish"></h3>
@@ -488,6 +494,91 @@
       feedback.style.color = '#ef4444';
       feedback.innerText = `❌ Essayez encore ! (Réponse attendue : ${correctTarget})`;
     }
+  }
+  // --- DUOLINGO ENGINE & AUDIO ---
+  let userScore = 0;
+  let flashcardQueue = [];
+  let currentFlashcardItem = null;
+
+  function speakText(text, langCode) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop previous audio
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langCode === 'de' ? 'de-DE' : 'th-TH';
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  function addPoints(pts) {
+    userScore += pts;
+    document.getElementById('userScore').innerText = userScore;
+  }
+
+  // --- LOGIQUE FLASHCARDS TYPE DUOLINGO ---
+  function initFlashcardQueue() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = (appData[currentLang].levels[level] && appData[currentLang].levels[level][cat]) || [];
+    flashcardQueue = [...words];
+    renderFlashcard();
+  }
+
+  function renderFlashcard() {
+    const container = document.getElementById('flashcardContent');
+    const progress = document.getElementById('flashcardProgress');
+
+    if (flashcardQueue.length === 0) {
+      progress.innerText = "";
+      container.innerHTML = `
+        <div style="font-size:48px; margin-bottom:8px;">🎉</div>
+        <h3>Lesson Complete!</h3>
+        <p>You mastered all words in this set!</p>
+        <button class="action-btn" onclick="initFlashcardQueue()">Practice Again</button>
+      `;
+      return;
+    }
+
+    progress.innerText = `Remaining in loop: ${flashcardQueue.length} word(s)`;
+    currentFlashcardItem = flashcardQueue[0];
+
+    // Auto-play audio on display
+    speakText(currentFlashcardItem.word.replace(/<[^>]*>?/gm, ''), currentLang);
+
+    container.innerHTML = `
+      <div style="font-size:64px; margin-bottom:8px;">${currentFlashcardItem.icon}</div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+        <span class="vocab-word" style="font-size:26px;">${currentFlashcardItem.word}</span>
+        <button onclick="speakText('${currentFlashcardItem.word.replace(/'/g, "\\'")}', '${currentLang}')" style="font-size:20px; background:none; border:none; cursor:pointer;">🔊</button>
+      </div>
+      <div class="vocab-phonetic" style="font-size:16px; margin-bottom:12px;">[${currentFlashcardItem.phonetic}] — ${currentFlashcardItem.translation}</div>
+      
+      <ul class="examples-list" style="text-align:left;">
+        ${currentFlashcardItem.examples.map(ex => {
+          const cleanExample = ex.target.replace(/<[^>]*>?/gm, '');
+          return `
+            <li style="margin-bottom: 8px;">
+              <div>${ex.target} <button onclick="speakText('${cleanExample.replace(/'/g, "\\'")}', '${currentLang}')" style="background:none; border:none; cursor:pointer;">🔊</button></div>
+              <span class="example-en">${ex.english}</span>
+            </li>
+          `;
+        }).join('')}
+      </ul>
+    `;
+  }
+
+  function answerFlashcard(isCorrect) {
+    if (!currentFlashcardItem) return;
+
+    if (isCorrect) {
+      playSuccessSound();
+      addPoints(10);
+      flashcardQueue.shift(); // Retire le mot réussi
+    } else {
+      // Déplace le mot raté à la fin de la file pour révision
+      const failedItem = flashcardQueue.shift();
+      flashcardQueue.push(failedItem);
+    }
+    renderFlashcard();
   }
 </script>
 </body>
