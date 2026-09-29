@@ -246,10 +246,14 @@
   }
 
   function changeLanguage(lang) {
-    currentLang = lang;
-    populateFilters();
+  currentLang = lang;
+  populateFilters();
+  if (currentView === 'flashcards') {
+    initFlashcardQueue();
+  } else {
     renderCurrentView();
   }
+}
 
   function populateFilters() {
     const levels = Object.keys(appData[currentLang].levels);
@@ -268,10 +272,18 @@
   function setView(view) {
     currentView = view;
     document.getElementById('vocabView').style.display = view === 'vocab' ? 'block' : 'none';
+    document.getElementById('flashcardView').style.display = view === 'flashcards' ? 'block' : 'none';
     document.getElementById('matchingView').style.display = view === 'matching' ? 'block' : 'none';
     document.getElementById('sentenceView').style.display = view === 'sentence' ? 'block' : 'none';
-    document.getElementById('filterBar').style.display = view === 'sentence' ? 'none' : 'block';
-    renderCurrentView();
+    document.getElementById('typingView').style.display = view === 'typing' ? 'block' : 'none';
+
+    document.getElementById('filterBar').style.display = (view === 'sentence' || view === 'typing') ? 'none' : 'block';
+
+    if (view === 'flashcards') {
+      initFlashcardQueue();
+    } else {
+      renderCurrentView();
+    }
   }
 
   function renderCurrentView() {
@@ -708,6 +720,67 @@
       setTimeout(() => {
         startNextQuizInBatch();
       }, 1800);
+    }
+  }
+  // --- FUNCTION POUR RÉCUPÉRER TOUTES LES PHRASES DES LEÇONS ---
+  function getAllLessonSentences() {
+    const sentences = [];
+    const levels = appData[currentLang].levels || {};
+    for (let lvl in levels) {
+      for (let cat in levels[lvl]) {
+        levels[lvl][cat].forEach(item => {
+          if (item.examples && item.examples.length > 0) {
+            item.examples.forEach(ex => {
+              const cleanTarget = ex.target.replace(/<[^>]*>?/gm, '');
+              sentences.push({
+                english: ex.english,
+                target: cleanTarget
+              });
+            });
+          }
+        });
+      }
+    }
+    return sentences.length > 0 ? sentences : [
+      { english: "Where is the train station?", target: currentLang === 'de' ? "Wo ist der Bahnhof?" : "สถานีรถไฟอยู่ที่ไหน" }
+    ];
+  }
+
+  // --- LOGIQUE TYPE (Saisie Clavier) ---
+  function renderTyping() {
+    const list = getAllLessonSentences();
+    if (currentSentenceIdx >= list.length) currentSentenceIdx = 0;
+    const item = list[currentSentenceIdx];
+    
+    document.getElementById('typingTargetEnglish').innerText = `"${item.english}"`;
+    document.getElementById('typingInput').value = '';
+    document.getElementById('typingFeedback').innerText = '';
+  }
+
+  function normalizeText(text) {
+    // Retire la ponctuation finale (. ! ?) et nettoie les espaces
+    return text.trim().replace(/[.!?]+$/, '').toLowerCase();
+  }
+
+  function checkTypingAnswer() {
+    const list = getAllLessonSentences();
+    const item = list[currentSentenceIdx];
+    const userAttempt = document.getElementById('typingInput').value;
+    const feedback = document.getElementById('typingFeedback');
+
+    if (normalizeText(userAttempt) === normalizeText(item.target)) {
+      playSuccessSound();
+      addPoints(15);
+      feedback.style.color = '#10b981';
+      feedback.innerText = '✨ Great job! (+15 pts)';
+      speakText(item.target, currentLang);
+      setTimeout(() => {
+        currentSentenceIdx = (currentSentenceIdx + 1) % list.length;
+        renderTyping();
+      }, 1200);
+    } else {
+      feedback.style.color = '#ef4444';
+      feedback.innerText = `❌ Try again! (Expected: ${item.target})`;
     }
   }
 </script>
