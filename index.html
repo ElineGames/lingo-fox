@@ -404,6 +404,91 @@
 
   document.getElementById('levelSelect').addEventListener('change', updateCategories);
   window.onload = initApp;
+  // --- NOUVEAUX MODES : CARTES ET CLAVIER ---
+  let currentFlashcardIdx = 0;
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('vocabView').style.display = view === 'vocab' ? 'block' : 'none';
+    document.getElementById('flashcardView').style.display = view === 'flashcards' ? 'block' : 'none';
+    document.getElementById('matchingView').style.display = view === 'matching' ? 'block' : 'none';
+    document.getElementById('sentenceView').style.display = view === 'sentence' ? 'block' : 'none';
+    document.getElementById('typingView').style.display = view === 'typing' ? 'block' : 'none';
+    document.getElementById('filterBar').style.display = (view === 'sentence' || view === 'typing') ? 'none' : 'block';
+    renderCurrentView();
+  }
+
+  function renderCurrentView() {
+    if (currentView === 'vocab') renderVocab();
+    else if (currentView === 'flashcards') renderFlashcard();
+    else if (currentView === 'matching') renderMatchingGame();
+    else if (currentView === 'sentence') renderSentence();
+    else if (currentView === 'typing') renderTyping();
+  }
+
+  // LOGIQUE MODE CARTES
+  function renderFlashcard() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = (appData[currentLang].levels[level] && appData[currentLang].levels[level][cat]) || [];
+    if (!words.length) return;
+
+    if (currentFlashcardIdx >= words.length) currentFlashcardIdx = 0;
+    const item = words[currentFlashcardIdx];
+
+    document.getElementById('flashcardContent').innerHTML = `
+      <div style="font-size:64px; margin-bottom:8px;">${item.icon}</div>
+      <div class="vocab-word" style="font-size:24px;">${item.word}</div>
+      <div class="vocab-phonetic" style="font-size:16px; margin-bottom:12px;">[${item.phonetic}] — ${item.translation}</div>
+      <ul class="examples-list" style="text-align:left;">
+        ${item.examples.map(ex => `<li>${ex.target}<span class="example-en">${ex.english}</span></li>`).join('')}
+      </ul>
+    `;
+  }
+
+  function nextFlashcard() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = appData[currentLang].levels[level][cat];
+    currentFlashcardIdx = (currentFlashcardIdx + 1) % words.length;
+    renderFlashcard();
+  }
+
+  function prevFlashcard() {
+    const level = document.getElementById('levelSelect').value;
+    const cat = document.getElementById('categorySelect').value;
+    const words = appData[currentLang].levels[level][cat];
+    currentFlashcardIdx = (currentFlashcardIdx - 1 + words.length) % words.length;
+    renderFlashcard();
+  }
+
+  // LOGIQUE MODE CLAVIER
+  function renderTyping() {
+    const sentenceData = appData[currentLang].sentences[currentSentenceIdx];
+    document.getElementById('typingTargetEnglish').innerText = `"${sentenceData.english}"`;
+    document.getElementById('typingInput').value = '';
+    document.getElementById('typingFeedback').innerText = '';
+  }
+
+  function checkTypingAnswer() {
+    const sentenceData = appData[currentLang].sentences[currentSentenceIdx];
+    const userAttempt = document.getElementById('typingInput').value.trim();
+    const correctTarget = sentenceData.correctOrder.join(' ');
+    const feedback = document.getElementById('typingFeedback');
+
+    if (userAttempt.toLowerCase() === correctTarget.toLowerCase()) {
+      playSuccessSound();
+      feedback.style.color = '#10b981';
+      feedback.innerText = '✨ Parfait !';
+      setTimeout(() => {
+        currentSentenceIdx = (currentSentenceIdx + 1) % appData[currentLang].sentences.length;
+        renderTyping();
+      }, 1200);
+    } else {
+      feedback.style.color = '#ef4444';
+      feedback.innerText = `❌ Essayez encore ! (Réponse attendue : ${correctTarget})`;
+    }
+  }
 </script>
 </body>
 </html>
