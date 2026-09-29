@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5"><link rel="manifest" href="manifest.json"><title>Lingo Fox</title>
+<style>
+:root{--bg:#f5f3ff;--card:#fff;--tx:#1e1b4b;--pr:#4f46e5;--ok:#16a34a;--ko:#dc2626;--mu:#6b7280}
+@media(prefers-color-scheme:dark){:root{--bg:#12102b;--card:#1e1b4b;--tx:#eef;--mu:#a5b4fc}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#app{max-width:480px;margin:auto;padding:14px;min-height:100vh}
+.bar{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px}
+.fox{display:flex;gap:10px;align-items:center;margin:8px 0 14px}
+.fox b{font-size:44px}.fox span{background:var(--card);border-radius:14px;padding:10px 12px;font-size:15px;flex:1}
+.card{background:var(--card);border-radius:18px;padding:18px;text-align:center;margin-bottom:12px;box-shadow:0 2px 8px #0002}
+.big{font-size:64px}.tg{font-size:34px;font-weight:700}.mu{color:var(--mu)}
+button{font:inherit;border:0;border-radius:14px;padding:14px;background:var(--pr);color:#fff;font-weight:600;width:100%;margin:5px 0;min-height:48px}
+button.o{background:var(--card);color:var(--tx);border:2px solid #8884}
+button.ok{background:var(--ok);color:#fff}button.ko{background:var(--ko);color:#fff}
+.row{display:flex;gap:8px}.row button{flex:1}
+.blocks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:56px;padding:8px}
+.blocks button{width:auto;margin:0;font-size:20px;padding:10px 14px}
+.ans{border-bottom:3px dashed #8886;margin-bottom:14px}
+.prog{height:8px;background:#8883;border-radius:8px;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--pr);border-radius:8px}
+input{font:inherit;width:100%;padding:12px;margin:4px 0;border-radius:10px;border:2px solid #8884;background:var(--card);color:var(--tx)}
+h3{margin:14px 0 6px}
+</style></head><body><div id="app"></div>
+<script>
+// ---------- DATA: [target, phonetic, english, icon] ----------
+const D={
+de:{name:'German',flag:'🇩🇪',voice:'de-DE',lessons:[{title:'Food & drink',
+ w:[['ich','ikh','I','🙋'],['esse','ESS-uh','eat','🍽️'],['trinke','TRINK-uh','drink','🥤'],['Wasser','VAH-ser','water','💧'],['Brot','broht','bread','🍞'],['Apfel','AP-fel','apple','🍎'],['und','oont','and','➕']],
+ s:[[['Ich','trinke','Wasser'],'I drink water.'],[['Ich','esse','Brot'],'I eat bread.'],[['Ich','esse','Brot','und','ich','trinke','Wasser'],'I eat bread and I drink water.']]},
+ {title:'Greetings',
+ w:[['Hallo','HAH-loh','hello','👋'],['ich bin','ikh bin','I am','🙋'],['Anna','AH-nah','Anna','👩'],['du bist','doo bist','you are','👉'],['gut','goot','good','👍'],['Danke','DAHN-kuh','thanks','🙏']],
+ s:[[['Hallo','ich bin','Anna'],'Hello, I am Anna.'],[['Du bist','gut'],'You are good.'],[['Hallo','Danke'],'Hello, thanks.']]}]},
+th:{name:'Thai',flag:'🇹🇭',voice:'th-TH',lessons:[{title:'Food & drink',
+ w:[['ฉัน','chǎn','I','🙋'],['กิน','gin','eat','🍽️'],['ดื่ม','dèum','drink','🥤'],['น้ำ','náam','water','💧'],['ข้าว','kâao','rice','🍚'],['ผลไม้','pǒn-la-máai','fruit','🍎'],['และ','lé','and','➕']],
+ s:[[['ฉัน','กิน','ข้าว'],'I eat rice.'],[['ฉัน','ดื่ม','น้ำ'],'I drink water.'],[['ฉัน','กิน','ข้าว','และ','ดื่ม','น้ำ'],'I eat rice and drink water.']]},
+ {title:'Greetings',
+ w:[['สวัสดี','sa-wàt-dee','hello','👋'],['ฉันชื่อ','chǎn chûue','my name is','🙋'],['แอนนา','ɛɛn-naa','Anna','👩'],['ขอบคุณ','kòop-kun','thank you','🙏'],['ครับ','kráp','(polite, male)','🙇‍♂️'],['ค่ะ','kâ','(polite, female)','🙇‍♀️']],
+ s:[[['สวัสดี','ค่ะ'],'Hello (female speaker).'],[['ฉันชื่อ','แอนนา'],'My name is Anna.'],[['ขอบคุณ','ครับ'],'Thank you (male speaker).']]}]}};
+
+// ---------- STATE ----------
+let S=JSON.parse(localStorage.getItem('lf1')||'null')||{lang:'de',score:0,streak:0,last:'',custom:{de:[],th:[]},done:{}};
+const save=()=>localStorage.setItem('lf1',JSON.stringify(S));
+const $=s=>document.querySelector(s),sh=a=>[...a].sort(()=>Math.random()-.5);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang=D[S.lang].voice;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+let ac;function beep(ok){try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);g.gain.value=.1;o.frequency.value=ok?660:160;o.frequency.setValueAtTime(ok?990:120,ac.currentTime+.12);o.start();o.stop(ac.currentTime+.28)}catch(e){}}
+const lessons=()=>{const L=[...D[S.lang].lessons],c=S.custom[S.lang];if(c.length)L.push({title:'My words',w:c,s:[]});return L};
+let Q=[],qi=0,msg='Ready to learn? 🦊',cur=null;
+
+// ---------- UI ----------
+const fox=m=>`<div class="fox"><b>🦊</b><span>${esc(m)}</span></div>`;
+const top=()=>`<div class="bar"><span>⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
+function home(){
+ const d=D[S.lang];
+ $('#app').innerHTML=top()+fox(msg)+`<div class="row">${Object.keys(D).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${D[k].flag} ${D[k].name}</button>`).join('')}</div>
+ <h3>Lessons</h3>${lessons().map((l,i)=>`<button class="o" onclick="start(${i})">${l.title} ${S.done[S.lang+i]?'✅':''}<br><small class="mu">${l.w.length} words</small></button>`).join('')}
+ <h3>Add your own word</h3><input id="t" placeholder="${d.name} word"><input id="p" placeholder="Pronunciation"><input id="e" placeholder="English meaning">
+ <button class="o" onclick="addW()">➕ Add to "My words"</button>`;
+}
+function addW(){const t=$('#t').value.trim(),p=$('#p').value.trim(),e=$('#e').value.trim();if(!t||!e)return;S.custom[S.lang].push([t,p,e,'⭐']);save();msg='Word added! 🎉';home()}
+function start(i){
+ const L=lessons()[i];cur=i;Q=[];
+ L.w.forEach(w=>Q.push({k:'card',w}));
+ sh(L.w).forEach(w=>Q.push({k:'quiz',w,L}));
+ L.s.forEach(s=>Q.push({k:'build',s,L}));
+ // revision: mixed
+ sh([...L.w.map(w=>({k:'quiz',w,L,rev:1})),...L.s.map(s=>({k:'build',s,L,rev:1}))]).forEach(x=>Q.push(x));
+ qi=0;step();
+}
+function step(){
+ if(qi>=Q.length)return finish();
+ const q=Q[qi],pr=`<div class="prog"><i style="width:${qi/Q.length*100}%"></i></div>`;
+ if(q.k=='card'){const[t,p,e,i]=q.w;speak(t);
+  $('#app').innerHTML=top()+pr+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${i}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" onclick="speak('${esc(t).replace(/'/g,"\\'")}')">🔊 Listen</button></div><button onclick="qi++;step()">Next →</button>`}
+ if(q.k=='quiz'){const rev=Math.random()<.5,[t,p,e,i]=q.w,pool=sh(q.L.w.filter(x=>x!==q.w)).slice(0,3),opts=sh([q.w,...pool]);
+  $('#app').innerHTML=top()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${i}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const ok=b.dataset.r=='true';b.className=ok?'ok':'ko';document.querySelectorAll('[data-r]').forEach(x=>x.onclick=null);if(!ok)document.querySelector('[data-r=true]').className='ok';speak(t);react(ok,10);setTimeout(()=>{qi++;step()},ok?900:1600)})}
+ if(q.k=='build'){const[ws,en]=q.s,extra=sh(q.L.w.map(w=>w[0]).filter(x=>!ws.includes(x))).slice(0,2);let bank=sh([...ws,...extra]).map((w,i)=>({w,i,u:0})),ans=[];
+  const draw=()=>{$('#app').innerHTML=top()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
+   document.querySelectorAll('[data-b]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.b];b.u=1;ans.push(b);draw()});
+   document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.a];b.u=0;ans=ans.filter(x=>x!==b);draw()});
+   $('#chk').onclick=()=>{const ok=ans.map(b=>b.w).join('|')==ws.join('|');speak(ws.join(' '));react(ok,15);if(ok)setTimeout(()=>{qi++;step()},1000);else{document.querySelector('.ans').insertAdjacentHTML('afterend',`<div class="card ko" style="color:#fff">Answer: ${esc(ws.join(' '))}</div>`);$('#chk').textContent='Continue →';$('#chk').onclick=()=>{qi++;step()}}}};
+  draw()}
+}
+const good=['Great job! 🎉','Perfect! ⭐','You rock! 🦊','Yes! Keep going! 🔥'],bad=['Almost! Try to remember it 💪','No worries, mistakes help you learn! 🌱'];
+function react(ok,pts){beep(ok);if(ok){S.score+=pts;save()}msg=sh(ok?good:bad)[0];if(navigator.vibrate)navigator.vibrate(ok?30:[60,40,60])}
+function finish(){
+ const t=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
+ if(S.last!=t){S.streak=S.last==y?S.streak+1:1;S.last=t}
+ S.done[S.lang+cur]=1;S.score+=20;save();beep(true);msg='Lesson complete! +20 ⭐ See you tomorrow!';
+ $('#app').innerHTML=top()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`;
+}
+home();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
