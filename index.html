@@ -51,10 +51,10 @@ let Q=[],qi=0,msg='Ready to learn? 🦊',cur=null;
 
 // ---------- UI ----------
 const fox=m=>`<div class="fox"><b>🦊</b><span>${esc(m)}</span></div>`;
-const top=()=>`<div class="bar"><span>⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
+const hdr=()=>`<div class="bar"><span>⭐ ${S.score}</span><span>🔥 ${S.streak} day${S.streak==1?'':'s'}</span></div>`;
 function home(){
  const d=D[S.lang];
- $('#app').innerHTML=top()+fox(msg)+`<div class="row">${Object.keys(D).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${D[k].flag} ${D[k].name}</button>`).join('')}</div>
+ $('#app').innerHTML=hdr()+fox(msg)+`<div class="row">${Object.keys(D).map(k=>`<button class="${k==S.lang?'':'o'}" onclick="S.lang='${k}';save();home()">${D[k].flag} ${D[k].name}</button>`).join('')}</div>
  <h3>Lessons</h3>${lessons().map((l,i)=>`<button class="o" onclick="start(${i})">${l.title} ${S.done[S.lang+i]?'✅':''}<br><small class="mu">${l.w.length} words</small></button>`).join('')}
  <h3>Add your own word</h3><input id="t" placeholder="${d.name} word"><input id="p" placeholder="Pronunciation"><input id="e" placeholder="English meaning">
  <button class="o" onclick="addW()">➕ Add to "My words"</button>`;
@@ -73,12 +73,12 @@ function step(){
  if(qi>=Q.length)return finish();
  const q=Q[qi],pr=`<div class="prog"><i style="width:${qi/Q.length*100}%"></i></div>`;
  if(q.k=='card'){const[t,p,e,i]=q.w;speak(t);
-  $('#app').innerHTML=top()+pr+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${i}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" onclick="speak('${esc(t).replace(/'/g,"\\'")}')">🔊 Listen</button></div><button onclick="qi++;step()">Next →</button>`}
+  $('#app').innerHTML=hdr()+pr+`<div class="mu">Step 1 · New word</div><div class="card"><div class="big">${i}</div><div class="tg">${esc(t)}</div><div class="mu">${esc(p)}</div><h3>${esc(e)}</h3><button class="o" onclick="speak('${esc(t).replace(/'/g,"\\'")}')">🔊 Listen</button></div><button onclick="qi++;step()">Next →</button>`}
  if(q.k=='quiz'){const rev=Math.random()<.5,[t,p,e,i]=q.w,pool=sh(q.L.w.filter(x=>x!==q.w)).slice(0,3),opts=sh([q.w,...pool]);
-  $('#app').innerHTML=top()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${i}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
+  $('#app').innerHTML=hdr()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 2 · Recognition'}</div><div class="card"><div class="big">${i}</div><div class="tg">${rev?esc(e):esc(t)}</div></div>`+opts.map(o=>`<button class="o" data-r="${o===q.w}">${esc(rev?o[0]:o[2])} ${rev?'<small class="mu">'+esc(o[1])+'</small>':''}</button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const ok=b.dataset.r=='true';b.className=ok?'ok':'ko';document.querySelectorAll('[data-r]').forEach(x=>x.onclick=null);if(!ok)document.querySelector('[data-r=true]').className='ok';speak(t);react(ok,10);setTimeout(()=>{qi++;step()},ok?900:1600)})}
  if(q.k=='build'){const[ws,en]=q.s,extra=sh(q.L.w.map(w=>w[0]).filter(x=>!ws.includes(x))).slice(0,2);let bank=sh([...ws,...extra]).map((w,i)=>({w,i,u:0})),ans=[];
-  const draw=()=>{$('#app').innerHTML=top()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
+  const draw=()=>{$('#app').innerHTML=hdr()+pr+`<div class="mu">${q.rev?'Step 4 · Revision':'Step 3 · Build the sentence'}</div><div class="card"><div class="big">🧩</div><h3>${esc(en)}</h3></div><div class="blocks ans">${ans.map(b=>`<button class="o" data-a="${b.i}">${esc(b.w)}</button>`).join('')}</div><div class="blocks">${bank.filter(b=>!b.u).map(b=>`<button class="o" data-b="${b.i}">${esc(b.w)}</button>`).join('')}</div><button id="chk" ${ans.length?'':'disabled style="opacity:.4"'}>Check ✔</button>`;
    document.querySelectorAll('[data-b]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.b];b.u=1;ans.push(b);draw()});
    document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const b=bank[e.dataset.a];b.u=0;ans=ans.filter(x=>x!==b);draw()});
    $('#chk').onclick=()=>{const ok=ans.map(b=>b.w).join('|')==ws.join('|');speak(ws.join(' '));react(ok,15);if(ok)setTimeout(()=>{qi++;step()},1000);else{document.querySelector('.ans').insertAdjacentHTML('afterend',`<div class="card ko" style="color:#fff">Answer: ${esc(ws.join(' '))}</div>`);$('#chk').textContent='Continue →';$('#chk').onclick=()=>{qi++;step()}}}};
@@ -90,7 +90,7 @@ function finish(){
  const t=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
  if(S.last!=t){S.streak=S.last==y?S.streak+1:1;S.last=t}
  S.done[S.lang+cur]=1;S.score+=20;save();beep(true);msg='Lesson complete! +20 ⭐ See you tomorrow!';
- $('#app').innerHTML=top()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`;
+ $('#app').innerHTML=hdr()+fox(msg)+`<div class="card"><div class="big">🏆</div><h3>Well done!</h3></div><button onclick="home()">Back to lessons</button>`;
 }
 home();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
