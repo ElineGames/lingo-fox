@@ -1,26 +1,114 @@
-// VOCAB: DATA[lang][level][category] = {i:icon, w:[[word, pronunciation, english, icon, [[sentence, english] x3]]]}
-// In sentences, put *stars* around the word to show it in bold. Thai sentences: separate words with spaces.
-// To add words: copy a line, edit it. To use an image instead of an emoji: put "apple.png" as icon (file in the img/ folder).
-const DATA={
-de:{A1:{
-'Food & drink':{i:'🍎',w:[
-['der Apfel','AP-fel','apple','🍎',[['Ich esse einen *Apfel*.','I eat an apple.'],['Der *Apfel* ist rot.','The apple is red.'],['Möchtest du einen *Apfel*?','Would you like an apple?']]],
-['das Brot','broht','bread','🍞',[['Ich kaufe *Brot*.','I buy bread.'],['Das *Brot* ist frisch.','The bread is fresh.'],['Er isst *Brot* mit Butter.','He eats bread with butter.']]],
-['das Wasser','VAH-ser','water','💧',[['Ich trinke *Wasser*.','I drink water.'],['Das *Wasser* ist kalt.','The water is cold.'],['Ein *Wasser*, bitte!','A water, please!']]],
-['essen','ESS-en','to eat','🍽️',[['Wir *essen* Brot.','We eat bread.'],['Ich möchte jetzt *essen*.','I want to eat now.'],['Was *esst* ihr?','What do you (pl.) eat?']]],
-['trinken','TRINK-en','to drink','🥤',[['Ich *trinke* Kaffee.','I drink coffee.'],['Du *trinkst* Wasser.','You drink water.'],['Wir möchten *trinken*.','We want to drink.']]]]},
-'Travel':{i:'🚆',w:[
-['der Zug','tsook','train','🚆',[['Der *Zug* ist schnell.','The train is fast.'],['Ich nehme den *Zug*.','I take the train.'],['Wo ist der *Zug*?','Where is the train?']]],
-['der Bahnhof','BAHN-hohf','train station','🚉',[['Der *Bahnhof* ist groß.','The station is big.'],['Ich bin am *Bahnhof*.','I am at the station.'],['Wo ist der *Bahnhof*?','Where is the station?']]],
-['die Fahrkarte','FAR-kar-tuh','ticket','🎫',[['Ich brauche eine *Fahrkarte*.','I need a ticket.'],['Die *Fahrkarte* kostet zehn Euro.','The ticket costs ten euros.'],['Hast du die *Fahrkarte*?','Do you have the ticket?']]],
-['fahren','FAH-ren','to go (by vehicle)','🚗',[['Wir *fahren* nach Berlin.','We are going to Berlin.'],['Ich *fahre* mit dem Zug.','I go by train.'],['Wann *fährst* du?','When are you leaving?']]]]}}},
-th:{A1:{
-'Food & drink':{i:'🍚',w:[
-['ข้าว','kâao','rice','🍚',[['ฉัน กิน *ข้าว*','I eat rice.'],['*ข้าว* อร่อย','The rice is tasty.'],['ขอ *ข้าว* ค่ะ','Rice, please. (female)']]],
-['น้ำ','náam','water','💧',[['ฉัน ดื่ม *น้ำ*','I drink water.'],['*น้ำ* เย็น','The water is cold.'],['ขอ *น้ำ* ครับ','Water, please. (male)']]],
-['กิน','gin','to eat','🍽️',[['ฉัน *กิน* ข้าว','I eat rice.'],['คุณ *กิน* อะไร','What do you eat?'],['เรา *กิน* ผลไม้','We eat fruit.']]],
-['ผลไม้','pǒn-la-máai','fruit','🍎',[['ฉัน ชอบ *ผลไม้*','I like fruit.'],['*ผลไม้* หวาน','The fruit is sweet.'],['ขอ *ผลไม้* ค่ะ','Fruit, please. (female)']]]]},
-'Travel':{i:'🚆',w:[
-['รถไฟ','rót-fai','train','🚆',[['*รถไฟ* เร็ว','The train is fast.'],['ฉัน นั่ง *รถไฟ*','I ride the train.'],['*รถไฟ* อยู่ ที่ไหน','Where is the train?']]],
-['ตั๋ว','dtǔa','ticket','🎫',[['ฉัน ซื้อ *ตั๋ว*','I buy a ticket.'],['*ตั๋ว* ราคา เท่าไหร่','How much is the ticket?'],['ขอ *ตั๋ว* ครับ','A ticket, please. (male)']]],
-['ไป','bpai','to go','🚗',[['ฉัน *ไป* กรุงเทพ','I go to Bangkok.'],['คุณ *ไป* ไหน','Where are you going?'],['เรา *ไป* สถานี','We go to the station.']]]]}}}};
+const appData = {
+  de: {
+    name: "German",
+    levels: {
+      A1: {
+        Food: [
+          {
+            id: "de_a1_1",
+            word: "der Apfel",
+            translation: "the apple",
+            icon: "🍎",
+            phonetic: "dɛːɐ̯ ˈapfəl",
+            examples: [
+              { target: "Ich esse <b>den Apfel</b>.", english: "I eat the apple." },
+              { target: "<b>Der Apfel</b> ist rot.", english: "The apple is red." },
+              { target: "Er kauft <b>einen Apfel</b>.", english: "He buys an apple." }
+            ]
+          },
+          {
+            id: "de_a1_2",
+            word: "das Wasser",
+            translation: "the water",
+            icon: "💧",
+            phonetic: "das ˈvasɐ",
+            examples: [
+              { target: "Ich trinke <b>das Wasser</b>.", english: "I drink the water." },
+              { target: "<b>Das Wasser</b> ist kalt.", english: "The water is cold." },
+              { target: "Brauchst du <b>Wasser</b>?", english: "Do you need water?" }
+            ]
+          }
+        ],
+        Travel: [
+          {
+            id: "de_a1_3",
+            word: "der Bahnhof",
+            translation: "the train station",
+            icon: "🚉",
+            phonetic: "dɛːɐ̯ ˈbaːnˌhoːf",
+            examples: [
+              { target: "Wo ist <b>der Bahnhof</b>?", english: "Where is the train station?" },
+              { target: "Ich gehe zum <b>Bahnhof</b>.", english: "I am going to the train station." },
+              { target: "<b>Der Bahnhof</b> ist groß.", english: "The train station is big." }
+            ]
+          }
+        ]
+      },
+      A2: {
+        Food: [
+          {
+            id: "de_a2_1",
+            word: "die Verpflegung",
+            translation: "the catering / meals",
+            icon: "🍱",
+            phonetic: "diː fɛɐ̯ˈp͡fleːɡʊŋ",
+            examples: [
+              { target: "<b>Die Verpflegung</b> ist inklusive.", english: "Catering is included." },
+              { target: "Wir sorgen für <b>die Verpflegung</b>.", english: "We take care of the food." },
+              { target: "Wie ist <b>die Verpflegung</b> dort?", english: "How are the meals there?" }
+            ]
+          }
+        ]
+      }
+    },
+    sentences: [
+      {
+        id: 101,
+        english: "I drink the water.",
+        correctOrder: ["Ich", "trinke", "das Wasser."],
+        words: ["das Wasser.", "Ich", "trinke", "den Apfel", "esse"]
+      }
+    ]
+  },
+  th: {
+    name: "Thai",
+    levels: {
+      A1: {
+        Food: [
+          {
+            id: "th_a1_1",
+            word: "กาแฟ",
+            translation: "coffee",
+            icon: "☕",
+            phonetic: "gaa-faæ",
+            examples: [
+              { target: "ดิฉันดื่ม<b>กาแฟ</b>", english: "I drink coffee." },
+              { target: "<b>กาแฟ</b>อร่อยมาก", english: "The coffee is very delicious." },
+              { target: "ขอ<b>กาแฟ</b>หนึ่งแก้ว", english: "One cup of coffee, please." }
+            ]
+          },
+          {
+            id: "th_a1_2",
+            word: "ข้าว",
+            translation: "rice / food",
+            icon: "🍚",
+            phonetic: "kâaw",
+            examples: [
+              { target: "กิน<b>ข้าว</b>หรือยัง", english: "Have you eaten yet?" },
+              { target: "ดิฉันชอบกิน<b>ข้าว</b>", english: "I like eating rice." },
+              { target: "<b>ข้าว</b>นี้ร้อนมาก", english: "This rice is very hot." }
+            ]
+          }
+        ]
+      }
+    },
+    sentences: [
+      {
+        id: 201,
+        english: "I eat rice.",
+        correctOrder: ["ดิฉัน", "กิน", "ข้าว"],
+        words: ["ข้าว", "ดื่ม", "ดิฉัน", "กิน", "กาแฟ"]
+      }
+    ]
+  }
+};
