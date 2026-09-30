@@ -921,16 +921,6 @@
     }
   }
   <!-- Level Selection Modal -->
-<div id="levelModal" class="modal-overlay" style="display: none;">
-  <div class="modal-content">
-    <h3 id="modalTitle">Level 1</h3>
-    <p id="modalDescription">Learn basic words and unlock the next step of the roadmap!</p>
-    <div class="modal-actions">
-      <button id="startLevelBtn" class="btn-primary">Start 🚀</button>
-      <button id="closeModalBtn" class="btn-secondary">Close</button>
-    </div>
-  </div>
-</div>
   // --- ROADMAP & MODAL LOGIC ---
 const levelData = {
   1: { title: "Level 1", desc: "Learn basic words and unlock the next step of the roadmap!" },
@@ -1019,5 +1009,14 @@ document.addEventListener('DOMContentLoaded', () => {
   updateRoadmapUI();
 });
 </script>
+  <div id="levelModal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3 id="modalTitle">Level 1</h3>
+    <p id="modalDescription">Learn basic words and unlock the next step of the roadmap!</p>
+    <div class="modal-actions">
+      <button id="startLevelBtn" class="btn-primary">Start 🚀</button>
+      <button id="closeModalBtn" class="btn-secondary">Close</button>
+    </div>
+  </div>
 </body>
 </html>
