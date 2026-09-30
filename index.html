@@ -930,7 +930,15 @@ const levelData = {
 };
 
 let currentSelectedLevel = null;
-
+// --- PROGRESS HELPER ---
+function getProgressData() {
+  try {
+    const data = localStorage.getItem('lingofox_progress');
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    return {};
+  }
+}
 function updateRoadmapUI() {
   const mode = currentView || 'vocab';
   const progressData = getProgressData();
