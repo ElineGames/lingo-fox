@@ -5,18 +5,23 @@ const appData = {
       A1: {
         Food: [
           // Anciens mots
-          {
-            id: "de_a1_1",
-            word: "der Apfel",
-            translation: "the apple",
-            icon: "🍎",
-            phonetic: "dɛːɐ̯ ˈapfəl",
-            examples: [
-              { target: "Ich esse <b>den Apfel</b>.", english: "I eat the apple." },
-              { target: "<b>Der Apfel</b> ist rot.", english: "The apple is red." },
-              { target: "Er kauft <b>einen Apfel</b>.", english: "He buys an apple." }
-            ]
-          },
+         // Exemple pour l'anglais :
+{
+  id: 1,
+  word: "der Apfel",
+  phonetic: "ap-fel",
+  translation: "The apple",
+  image: "assets/apple.jpeg"
+}
+
+// Ou pour le thaï :
+{
+  id: 1,
+  word: "der Apfel",
+  phonetic: "ap-fel",
+  translation: "แอปเปิ้ล",
+  image: "assets/apple.jpeg"
+}
           {
             id: "de_a1_2",
             word: "das Wasser",
