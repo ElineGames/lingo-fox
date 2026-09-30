@@ -12,7 +12,7 @@ const appData = {
   phonetic: "ap-fel",
   translation: "The apple",
   image: "assets/apple.jpeg"
-}
+},
 
 // Ou pour le thaï :
 {
@@ -21,7 +21,7 @@ const appData = {
   phonetic: "ap-fel",
   translation: "แอปเปิ้ล",
   image: "assets/apple.jpeg"
-}
+},
           {
             id: "de_a1_2",
             word: "das Wasser",
