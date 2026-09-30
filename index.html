@@ -989,7 +989,87 @@ function openLevelModal(level) {
 function closeModal() {
   document.getElementById('levelModal').style.display = 'none';
 }
+let currentLevelQueue = [];
+let levelErrors = 0;
 
+function selectLevel(level) {
+  // 1. Masquer la carte de roadmap
+  const roadmap = document.getElementById('roadmapContainer');
+  if (roadmap) roadmap.style.display = 'none';
+  
+  // 2. Masquer TOUTES les vues de jeux par sécurité
+  const views = ['vocabView', 'flashcardView', 'matchingView', 'sentenceView', 'typingView'];
+  views.forEach(vId => {
+    const el = document.getElementById(vId);
+    if (el) el.style.display = 'none';
+  });
+
+  // 3. Afficher uniquement la vue du mode de jeu actif actuel
+  const activeViewId = currentView === 'vocab' ? 'vocabView' :
+                       currentView === 'flashcards' ? 'flashcardView' :
+                       currentView === 'matching' ? 'matchingView' :
+                       currentView === 'sentence' ? 'sentenceView' : 'typingView';
+                       
+  const targetView = document.getElementById(activeViewId);
+  if (targetView) targetView.style.display = 'block';
+
+  // 4. Réinitialiser les erreurs et préparer les 10 mots du niveau
+  levelErrors = 0;
+  const allWords = typeof vocabList !== 'undefined' ? vocabList : [];
+  const startIndex = (level - 1) * 10;
+  currentLevelQueue = allWords.slice(startIndex, startIndex + 10);
+  
+  if (currentLevelQueue.length === 0) {
+    currentLevelQueue = allWords.slice(0, 10);
+  }
+
+  // 5. Lancer le jeu selon le mode actif
+  if (currentView === 'flashcards' && typeof initFlashcardQueueCustom === 'function') {
+    initFlashcardQueueCustom(currentLevelQueue);
+  } else if (currentView === 'matching' && typeof initMatchingGame === 'function') {
+    initMatchingGame(currentLevelQueue);
+  } else if (currentView === 'sentence' && typeof initSentenceGame === 'function') {
+    initSentenceGame(currentLevelQueue);
+  } else if (currentView === 'typing' && typeof initTypingGame === 'function') {
+    initTypingGame(currentLevelQueue);
+  } else if (currentView === 'vocab' && typeof initVocabLesson === 'function') {
+    initVocabLesson(currentLevelQueue);
+  }
+}
+
+// Gestion globale des 3 erreurs pour tous les jeux
+function registerGameError() {
+  levelErrors++;
+  if (levelErrors >= 3) {
+    showGameOverModal();
+  }
+}
+
+function showGameOverModal() {
+  const titleEl = document.getElementById('modalTitle');
+  const descEl = document.getElementById('modalDescription');
+  const startBtn = document.getElementById('startLevelBtn');
+  const modalEl = document.getElementById('levelModal');
+
+  if (titleEl) titleEl.innerText = "Perdu ! ❌";
+  if (descEl) descEl.innerText = "Vous avez commis 3 erreurs dans ce niveau. Entraînez-vous à nouveau !";
+  if (startBtn) startBtn.innerText = "Réessayer";
+  if (modalEl) modalEl.style.display = 'flex';
+
+  if (startBtn) {
+    startBtn.onclick = () => {
+      closeModal();
+      // Cacher tous les jeux et réafficher la carte
+      ['vocabView', 'flashcardView', 'matchingView', 'sentenceView', 'typingView'].forEach(vId => {
+        const el = document.getElementById(vId);
+        if (el) el.style.display = 'none';
+      });
+      const roadmap = document.getElementById('roadmapContainer');
+      if (roadmap) roadmap.style.display = 'block';
+      updateRoadmapUI();
+    };
+  }
+}
 // Event Listeners for Modal
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('closeModalBtn');
