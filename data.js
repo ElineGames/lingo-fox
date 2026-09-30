@@ -10,7 +10,7 @@ const appData = {
     word: "der Apfel",
     phonetic: "ap-fel",
     translation: "the apple",
-    image: "asset/apple.jpeg",
+    image: "./asset/apple.jpeg",
     examples: [
       { target: "Ich esse <b>den Apfel</b>.", english: "I eat the apple." }
     ]
