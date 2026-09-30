@@ -340,7 +340,7 @@
     container.innerHTML = words.map(item => `
       <div class="vocab-card">
         <div class="vocab-header">
-         ${item.image ? `<img src="${item.image}" alt="${item.word}" class="vocab-image" loading="lazy">` : `<span class="vocab-icon">${item.icon}</span>`}
+         ${(item.image && item.image.startsWith('asset/')) ? `<img src="${item.image}" alt="${item.word}" class="vocab-image" loading="lazy">` : `<span class="vocab-icon">${item.image || item.icon}</span>`}
           <div>
             <div class="vocab-word">${item.word}</div>
             <div class="vocab-phonetic">[${item.phonetic}] — ${item.translation}</div>
