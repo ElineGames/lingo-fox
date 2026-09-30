@@ -12,8 +12,10 @@ const appData = {
     translation: "the apple",
    image: "🍎",
     examples: [
-      { target: "Ich esse <b>den Apfel</b>.", english: "I eat the apple." }
-    ]
+  { target: "Ich esse den Apfel.", english: "I eat the apple." },
+  { target: "Der Apfel ist rot.", english: "The apple is red." },
+  { target: "Er kauft einen Apfel.", english: "He buys an apple." }
+]
   },
           {
             id: "de_a1_2",
