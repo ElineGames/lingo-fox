@@ -419,6 +419,7 @@
     } else {
       renderCurrentView();
     }
+    updateRoadmapUI(); // 👈 Rajoute cette ligne ici !
   }
 
   function renderCurrentView() {
@@ -581,6 +582,7 @@
     document.getElementById('typingView').style.display = view === 'typing' ? 'block' : 'none';
     document.getElementById('filterBar').style.display = (view === 'sentence' || view === 'typing') ? 'none' : 'block';
     renderCurrentView();
+    updateRoadmapUI();
   }
 
   function renderCurrentView() {
