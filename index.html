@@ -929,7 +929,93 @@
     </div>
   </div>
 </div>
+  // --- ROADMAP & MODAL LOGIC ---
+const levelData = {
+  1: { title: "Level 1", desc: "Learn basic words and unlock the next step of the roadmap!" },
+  2: { title: "Level 2", desc: "Keep going and build your progress!" },
+  3: { title: "Level 3", desc: "You are almost at the finish line!" },
+  4: { title: "Level 4", desc: "The ultimate challenge!" }
+};
+
+let currentSelectedLevel = null;
+
+function updateRoadmapUI() {
+  const mode = currentView || 'vocab';
+  const progressData = getProgressData();
+  const currentLevel = progressData[mode] ? progressData[mode].level : 1;
+  const roadmapEl = document.getElementById('roadmapContainer');
   
+  if (!roadmapEl) return;
+
+  const nodes = roadmapEl.querySelectorAll('.level-node');
+  const fox = document.getElementById('foxAvatar');
+
+  nodes.forEach(node => {
+    const lvl = parseInt(node.getAttribute('data-level'));
+    node.classList.remove('active', 'completed', 'locked');
+
+    if (lvl < currentLevel) {
+      node.classList.add('completed');
+      node.innerHTML = `✓`;
+    } else if (lvl === currentLevel) {
+      node.classList.add('active');
+      node.innerHTML = lvl;
+      if (fox) {
+        fox.style.left = node.style.left;
+        fox.style.top = node.style.top;
+      }
+    } else {
+      node.classList.add('locked');
+      node.innerHTML = `${lvl} <span class="lock-icon">🔒</span>`;
+    }
+  });
+}
+
+function openLevelModal(level) {
+  const progressData = getProgressData();
+  const mode = currentView || 'vocab';
+  const maxUnlocked = progressData[mode] ? progressData[mode].level : 1;
+
+  if (level > maxUnlocked) return; // Level locked
+
+  currentSelectedLevel = level;
+  const data = levelData[level] || { title: `Level ${level}`, desc: "Complete the exercises to level up!" };
+
+  document.getElementById('modalTitle').innerText = data.title;
+  document.getElementById('modalDescription').innerText = data.desc;
+  document.getElementById('levelModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('levelModal').style.display = 'none';
+}
+
+// Event Listeners for Modal
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('closeModalBtn');
+  const startBtn = document.getElementById('startLevelBtn');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      closeModal();
+      if (typeof selectLevel === 'function') {
+        selectLevel(currentSelectedLevel);
+      }
+    });
+  }
+
+  // Attach click to level nodes
+  document.querySelectorAll('.level-node').forEach(node => {
+    node.addEventListener('click', () => {
+      const lvl = parseInt(node.getAttribute('data-level'));
+      openLevelModal(lvl);
+    });
+  });
+
+  updateRoadmapUI();
+});
 </script>
 </body>
 </html>
