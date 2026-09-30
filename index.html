@@ -12,7 +12,28 @@
     --accent: #10b981;
     --text: #1f2937;
   }
+    
+/* Alignement et placement du logo */
+.app-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 10px;
+}
 
+.app-logo {
+  max-width: 280px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .app-logo {
+    max-width: 200px;
+  }
+}
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--bg);
