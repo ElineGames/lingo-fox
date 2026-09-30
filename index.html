@@ -200,8 +200,30 @@
     <select id="categorySelect" onchange="renderCurrentView()"></select>
   </div>
 
-  <div class="card" id="vocabView"></div>
+  </div> <!-- Fin de filterBar -->
 
+<!-- Carte de parcours globale -->
+<div class="roadmap-container">
+  <div id="foxAvatar" class="fox-avatar">🦊</div>
+
+  <div class="level-node active" data-level="1" style="top: 30px; left: 50%;">
+    <span class="node-number">1</span>
+  </div>
+  <div class="level-node locked" data-level="2" style="top: 130px; left: 35%;">
+    <span class="node-number">2</span>
+    <span class="lock-icon">🔒</span>
+  </div>
+  <div class="level-node locked" data-level="3" style="top: 230px; left: 65%;">
+    <span class="node-number">3</span>
+    <span class="lock-icon">🔒</span>
+  </div>
+  <div class="level-node locked" data-level="4" style="top: 330px; left: 50%;">
+    <span class="node-number">4</span>
+    <span class="lock-icon">🔒</span>
+  </div>
+</div>
+
+<div class="card" id="vocabView"></div>
   <div class="card" id="matchingView" style="display:none;">
     <h3>Match Word with Icon/Translation</h3>
     <p style="font-size: 13px; color: #6b7280;">Select a word on the left, then its match on the right!</p>
