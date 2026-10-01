@@ -26,52 +26,65 @@ input{width:100%;padding:12px;font-size:16px;border-radius:8px;border:1px solid 
 .modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:1000}.mc{background:#fff;padding:24px;border-radius:16px;max-width:300px;width:85%;text-align:center}
 .mc button{margin:4px;padding:10px 16px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;padding:12px 20px;border-radius:20px;font-weight:bold;box-shadow:0 4px 12px #0005;display:none;z-index:2000}
+button:disabled{opacity:.4}.mc h4{margin:14px 0 6px;color:#2d5a31}
 </style></head><body><div class="container">
-<header><img src="asset/lingofox-logo.png" alt="LingoFox" class="app-logo" onerror="this.style.display='none'"><select id="langSelect" onchange="changeLanguage(this.value)"><option value="de">German 🇩🇪</option><option value="th">Thai 🇹🇭</option></select></header>
+<header><img src="asset/lingofox-logo.png" alt="LingoFox" class="app-logo" onerror="this.style.display='none'"><button class="nav-btn" onclick="openGlo()">📚</button><select id="langSelect" onchange="changeLanguage(this.value)"><option value="de">German 🇩🇪</option><option value="th">Thai 🇹🇭</option></select></header>
 <div style="text-align:center"><div id="scoreBoard">⭐ Score: <span id="userScore">0</span> pts</div></div>
 <div id="screen"></div></div>
 <div id="levelModal" class="modal"><div class="mc"><h3 id="mt"></h3><p id="md" style="color:#4b5563;font-size:14px"></p><button id="ms" style="background:#10b981;color:#fff">Start 🚀</button><button onclick="$('levelModal').style.display='none'" style="background:#e5e7eb">Close</button></div></div>
+<div id="glo" class="modal"><div class="mc" id="gc" style="max-width:480px;max-height:85vh;overflow:auto;text-align:left"></div></div>
 <div id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="data.js"></script><script src="worlds.js"></script>
+<script src="data.js"></script><script src="vocab-supermarket.js"></script><script src="worlds.js"></script>
 <script>
 const $=id=>document.getElementById(id),strip=t=>String(t).replace(/<[^>]*>/g,''),sh=a=>[...a].sort(()=>Math.random()-.5),esc=s=>s.replace(/"/g,'&quot;');
 let lang='de',W=null,LI=0,LW=[],mapOn=0,fq=[],qq=[],qt=null,qtm;
 let P=Object.assign({score:0,prog:{},act:{},fox:{}},JSON.parse(localStorage.getItem('pm_v2')||'{}'));
 const save=()=>localStorage.setItem('pm_v2',JSON.stringify(P)),pk=w=>lang+'|'+w.id,done=w=>P.prog[pk(w)]||0;
-const ico=w=>(w.image&&w.image.startsWith('asset/'))?`<img class="vi" src="${w.image}">`:(w.image||w.icon||'❓');
+const ph=w=>(w.phonetic?'['+w.phonetic+'] — ':'')+w.translation,ico=w=>(w.image&&w.image.startsWith('asset/'))?`<img class="vi" src="${w.image}">`:(w.image||w.icon||'❓');
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500)}
-function speak(t){if('speechSynthesis' in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(strip(t));u.lang=lang=='de'?'de-DE':'th-TH';speechSynthesis.speak(u)}}
+function speak(t){if('speechSynthesis' in window){speechSynthesis.cancel();let x=strip(t).replace(/\*/g,'');if(lang=='th')x=x.replace(/ /g,', ');const u=new SpeechSynthesisUtterance(x);u.lang=lang=='de'?'de-DE':'th-TH';u.rate=lang=='th'?.55:.9;speechSynthesis.speak(u)}}
 function sound(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(587.33,c.currentTime);o.frequency.exponentialRampToValueAtTime(880,c.currentTime+.15);g.gain.setValueAtTime(.15,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+.2);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.2)}catch(e){}}
 function addPoints(n){P.score+=n;$('userScore').textContent=P.score;save()}
-const wordsOf=w=>w.src.flatMap(([l,c])=>((appData[lang].levels[l]||{})[c])||[]);
-function levelsOf(w){const A=wordsOf(w),sz=Math.max(1,Math.ceil(A.length/5)),n=Math.ceil(A.length/sz);return Array.from({length:n},(_,i)=>A.slice(i*sz,(i+1)*sz))}
+const wordsOf=w=>w.src.flatMap(([l,c])=>(((appData[lang].levels[l]||{})[c])||[]).map(x=>(x._c=c,x)));
+function levelsOf(w){const A=wordsOf(w),sz=Math.max(w.per||Math.ceil(A.length/5),Math.ceil(A.length/20),1),n=Math.ceil(A.length/sz);return Array.from({length:n},(_,i)=>A.slice(i*sz,(i+1)*sz))}
 function changeLanguage(l){lang=l;W?openWorld(W.id):home()}
 document.addEventListener('click',e=>{const s=e.target.closest('[data-say]');if(s)speak(s.dataset.say);const n=e.target.closest('.lv');if(n&&!n.classList.contains('locked'))lvModal(+n.dataset.i)});
 // ---------- HOME: worlds ----------
 function home(){mapOn++;W=null;clearInterval(qtm);$('screen').innerHTML=WORLDS.map(w=>{const n=levelsOf(w).length,d=Math.min(done(w),n);return `<div class="card world ${n?'':'off'}" ${n?`onclick="openWorld('${w.id}')"`:''} style="background:linear-gradient(135deg,${w.sky[0]},#fff)"><span style="font-size:44px">${w.icon}</span><div><b style="font-size:20px">${w.name}</b><br>${n?d+'/'+n+' levels':'Coming soon 🚧'}</div></div>`}).join('')}
 // ---------- WORLD MAP ----------
 const pos=(i,n)=>[[.5,.25,.72,.28,.5][i%5],n==1?.5:.86-i*.72/(n-1)];
-function openWorld(id){W=WORLDS.find(x=>x.id==id);clearInterval(qtm);const L=levelsOf(W),n=L.length,d=Math.min(done(W),n),ps=L.map((_,i)=>pos(i,n));
- $('screen').innerHTML=`<button class="nav-btn" onclick="home()">← Worlds</button><h2>${W.icon} ${W.name}</h2><div id="map" class="map" style="background:linear-gradient(${W.sky[0]},${W.sky[1]})"><svg viewBox="0 0 340 510" preserveAspectRatio="xMidYMid slice">${W.decor}<polyline points="${ps.map(p=>p[0]*340+','+p[1]*510).join(' ')}" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="4 12" stroke-linecap="round"/></svg>${ps.map((p,i)=>`<div class="lv ${i<d?'completed':i==d?'active':'locked'}" data-i="${i}" style="left:${p[0]*100}%;top:${p[1]*100}%">${i<d?'✓':i+1}${i>d?'<span class="lk">🔒</span>':''}</div>`).join('')}</div><p class="hint">Tap a level to enter it 👆</p>`;
- const from=Math.min(P.fox[pk(W)]||0,n-1),to=Math.min(d,n-1);P.fox[pk(W)]=to;save();initFox(ps,from,to)}
-function mkFox(){const g=new THREE.Group(),M=c=>new THREE.MeshStandardMaterial({color:c,roughness:.7}),O=M(0xf97316),Wh=M(0xffffff),K=M(0x111827),S=r=>new THREE.SphereGeometry(r,16,12),C=(r,h)=>new THREE.ConeGeometry(r,h,12);
- const A=(geo,mat,x,y,z,rx,rz,s)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.rotation.set(rx||0,0,rz||0);if(s)o.scale.set(s[0],s[1],s[2]);g.add(o)};
- A(S(1),O,0,0,0,0,0,[1,.85,1.35]);A(S(.85),O,0,.7,1.3);A(C(.4,.9),O,-.5,1.55,1.1,0,.25);A(C(.4,.9),O,.5,1.55,1.1,0,-.25);A(C(.4,.9),Wh,0,.45,2.05,Math.PI/2);
- A(S(.12),K,0,.5,2.5);A(S(.1),K,-.32,.95,2);A(S(.1),K,.32,.95,2);A(C(.5,1.6),O,0,.4,-1.9,-Math.PI/2+.4);A(S(.3),Wh,0,.75,-2.7);
- [[-.5,.7],[.5,.7],[-.5,-.7],[.5,-.7]].forEach(([x,z])=>A(new THREE.CylinderGeometry(.14,.14,.7),K,x,-.8,z));return g}
+let PG=-1;
+function openWorld(id,p){const nw=!W||W.id!=id;W=WORLDS.find(x=>x.id==id);clearInterval(qtm);const L=levelsOf(W),n=L.length;if(!n)return home();
+ const d=Math.min(done(W),n),pages=Math.ceil(n/5);if(p===undefined)p=(nw||PG<0)?Math.floor(Math.min(d,n-1)/5):PG;PG=p=Math.max(0,Math.min(p,pages-1));
+ const s=p*5,e=Math.min(n,s+5)-1,ps=[];for(let i=s;i<=e;i++)ps.push(pos(i-s,e-s+1));
+ const art=W.bg?`<image href="${W.bg}" width="340" height="510" preserveAspectRatio="xMidYMid slice"/>`:(typeof W.decor=='function'?W.decor(p):W.decor);
+ $('screen').innerHTML=`<button class="nav-btn" onclick="home()">← Worlds</button><h2>${W.icon} ${W.name}</h2><div class="row" style="align-items:center;justify-content:space-between;color:#fff;font-weight:bold"><button class="nav-btn" ${p?'':'disabled'} onclick="openWorld('${W.id}',${p-1})">◀</button><span>Aisle ${p+1}/${pages} · ${d}/${n} levels</span><button class="nav-btn" ${p<pages-1?'':'disabled'} onclick="openWorld('${W.id}',${p+1})">▶</button></div><div id="map" class="map" style="background:linear-gradient(${W.sky[0]},${W.sky[1]})"><svg viewBox="0 0 340 510" preserveAspectRatio="xMidYMid slice">${art}<polyline points="${ps.map(q=>q[0]*340+','+q[1]*510).join(' ')}" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="4 12" stroke-linecap="round"/></svg>${ps.map((q,k)=>{const i=s+k;return `<div class="lv ${i<d?'completed':i==d?'active':'locked'}" data-i="${i}" style="left:${q[0]*100}%;top:${q[1]*100}%">${i<d?'✓':i+1}${i>d?'<span class="lk">🔒</span>':''}</div>`}).join('')}</div><p class="hint">Tap a level to enter it 👆 · 📚 = your glossary</p>`;
+ const fi=Math.min(P.fox[pk(W)]||0,n-1),tg=Math.min(d,n-1),cl=v=>Math.max(s,Math.min(e,v))-s;P.fox[pk(W)]=tg;save();initFox(ps,cl(fi),cl(tg))}
+function mkFox(){const g=new THREE.Group(),M=c=>new THREE.MeshStandardMaterial({color:c,roughness:.75}),O=M(0xf27a1a),Wh=M(0xfff7ed),K=M(0x1c1917),Pk=M(0xfda4af),S=r=>new THREE.SphereGeometry(r,24,18),C=(r,h)=>new THREE.ConeGeometry(r,h,16),u=g.userData;
+ const A=(geo,mat,x,y,z,rx,rz,sc,par)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.rotation.set(rx||0,0,rz||0);if(sc)o.scale.set(sc[0],sc[1],sc[2]);(par||g).add(o)};
+ A(S(1),O,0,0,0,0,0,[1,.85,1.4]);A(S(.8),Wh,0,-.2,.35,0,0,[.85,.7,1.2]);
+ const hd=new THREE.Group();hd.position.set(0,.75,1.3);g.add(hd);u.head=hd;
+ A(S(.85),O,0,0,0,0,0,null,hd);A(S(.35),Wh,-.55,-.2,.35,0,0,[1,.8,1],hd);A(S(.35),Wh,.55,-.2,.35,0,0,[1,.8,1],hd);
+ A(C(.38,.95),O,-.5,.95,-.1,0,.3,null,hd);A(C(.38,.95),O,.5,.95,-.1,0,-.3,null,hd);A(C(.2,.5),Pk,-.5,.9,.05,0,.3,null,hd);A(C(.2,.5),Pk,.5,.9,.05,0,-.3,null,hd);A(C(.18,.35),K,-.62,1.28,-.1,0,.3,null,hd);A(C(.18,.35),K,.62,1.28,-.1,0,-.3,null,hd);
+ A(C(.42,.95),Wh,0,-.25,.95,Math.PI/2,0,null,hd);A(S(.13),K,0,-.2,1.45,0,0,null,hd);
+ [-1,1].forEach(q=>{A(S(.16),Wh,q*.33,.2,.72,0,0,null,hd);A(S(.09),K,q*.33,.2,.86,0,0,null,hd);A(S(.03),Wh,q*.3,.25,.93,0,0,null,hd)});
+ const tl=new THREE.Group();tl.position.set(0,.2,-1.4);g.add(tl);u.tail=tl;A(S(.55),O,0,.3,-1,0,0,[.85,.85,1.9],tl);A(S(.38),Wh,0,.45,-2.15,0,0,[.9,.9,1.2],tl);
+ u.legs=[[-.5,.7],[.5,.7],[-.5,-.7],[.5,-.7]].map(([x,z])=>{const l=new THREE.Group();l.position.set(x,-.45,z);g.add(l);A(new THREE.CylinderGeometry(.16,.14,.55,12),O,0,-.2,0,0,0,null,l);A(S(.18),K,0,-.5,.05,0,0,[1,.7,1.3],l);return l});return g}
 function initFox(ps,from,to){const m=$('map'),w=m.clientWidth,h=m.clientHeight,px=i=>[ps[i][0]*w,(1-ps[i][1])*h];
  if(!window.THREE){const f=document.createElement('div');f.textContent='🦊';f.style.cssText=`position:absolute;font-size:34px;transform:translate(-50%,-115%);left:${ps[to][0]*100}%;top:${ps[to][1]*100}%`;m.appendChild(f);return}
  const cv=document.createElement('canvas');cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';m.appendChild(cv);
- const rd=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});rd.setPixelRatio(Math.min(devicePixelRatio,2));rd.setSize(w,h,false);
- const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(0,w,h,0,-800,800),dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(.5,1,1);sc.add(new THREE.AmbientLight(0xffffff,.8),dl);
- const fox=mkFox(),pv=new THREE.Group();fox.rotation.set(.5,.4,0);pv.add(fox);pv.scale.setScalar(Math.max(14,w/16));sc.add(pv);
+ const rd=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true});rd.setPixelRatio(Math.min(devicePixelRatio,2));rd.setSize(w,h,false);rd.outputEncoding=THREE.sRGBEncoding;
+ const sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(0,w,h,0,-800,800),dl=new THREE.DirectionalLight(0xffffff,.7);dl.position.set(.5,1,1.2);sc.add(new THREE.HemisphereLight(0xffffff,0xffd9a8,.9),dl);
+ const fox=mkFox(),u=fox.userData,pv=new THREE.Group(),sd=new THREE.Mesh(new THREE.CircleGeometry(1.5,24),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.25,depthWrite:false}));
+ sd.scale.set(1.6,.45,1);sd.position.set(0,-1.5,-2);fox.rotation.set(.45,.4,0);pv.add(sd,fox);pv.scale.setScalar(Math.max(12,w/24));sc.add(pv);
  let [x,y]=px(from),tw=null;const id=++mapOn;
- if(to!=from)setTimeout(()=>{const[tx,ty]=px(to);tw={sx:x,sy:y,tx,ty,t0:performance.now()};fox.rotation.y=tx>=x?.9:-.9},600);
+ if(to!=from)setTimeout(()=>{const[tx,ty]=px(to);tw={sx:x,sy:y,tx,ty,t0:performance.now(),dur:300+Math.hypot(tx-x,ty-y)*5};fox.rotation.y=tx>=x?.9:-.9},700);
  (function loop(t){if(id!=mapOn||!cv.isConnected){rd.dispose();return}let k=0;
-  if(tw){k=Math.min(1,(t-tw.t0)/900);const e=k*k*(3-2*k);x=tw.sx+(tw.tx-tw.sx)*e;y=tw.sy+(tw.ty-tw.sy)*e;if(k==1){tw=null;fox.rotation.y=.4;speakNo()}}
-  pv.position.set(x,y+h*.055+Math.sin(t/250)*2+(tw?Math.sin(k*Math.PI)*45:0),0);rd.render(sc,cam);requestAnimationFrame(loop)})(0)}
-function speakNo(){}
+  if(tw){k=Math.min(1,(t-tw.t0)/tw.dur);const e=k*k*(3-2*k);x=tw.sx+(tw.tx-tw.sx)*e;y=tw.sy+(tw.ty-tw.sy)*e;if(k==1){tw=null;fox.rotation.y=.4}}
+  u.legs.forEach((l,i)=>l.rotation.x=tw?Math.sin(t/70+(i%2?Math.PI:0))*.7:0);u.tail.rotation.y=Math.sin(t/200)*.4;u.head.rotation.z=Math.sin(t/650)*.08;
+  pv.position.set(x,y+h*.07+Math.sin(t/260)*2+(tw?Math.sin(k*Math.PI)*30:0),0);rd.render(sc,cam);requestAnimationFrame(loop)})(0)}
+
 function lvModal(i){const L=levelsOf(W)[i];$('mt').textContent=`${W.icon} Level ${i+1}`;$('md').textContent=L.map(w=>strip(w.word)).join(', ');$('ms').onclick=()=>{$('levelModal').style.display='none';openLevel(i)};$('levelModal').style.display='flex'}
 // ---------- LEVEL: all words + games live here ----------
 const ACT=[['lesson','📖 Lessons'],['cards','🎴 Flashcards'],['match','🧩 Match'],['sent','🧱 Reorder'],['type','⌨️ Type']];
@@ -82,10 +95,10 @@ function markAct(a){const k=pk(W)+'|'+LI,A=P.act[k]=P.act[k]||[];if(!A.includes(
 function finish(m){$('stage').innerHTML=`<div class="big">🎉</div><h3>${m}</h3><button class="action-btn" onclick="openWorld('${W.id}')">🗺️ Back to map</button>`}
 const exs=w=>w.examples.map(e=>`<li data-say="${esc(strip(e.target))}">🔊 ${e.target}<span class="en">${e.english}</span></li>`).join('');
 function run(a){clearInterval(qtm);
- if(a=='lesson'){$('stage').innerHTML=LW.map(w=>`<div style="text-align:left;border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center"><span style="font-size:36px">${ico(w)}</span><div><div class="vw">${w.word}</div><div class="ph">[${w.phonetic}] — ${w.translation}</div></div></div><ul class="ex">${exs(w)}</ul></div>`).join('')+`<button class="action-btn" onclick="markAct('lesson');toast('Lesson done ✅')">✔ Lesson done</button>`}
+ if(a=='lesson'){$('stage').innerHTML=LW.map(w=>`<div style="text-align:left;border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center"><span style="font-size:36px">${ico(w)}</span><div><div class="vw">${w.word}</div><div class="ph">${ph(w)}</div></div></div><ul class="ex">${exs(w)}</ul></div>`).join('')+`<button class="action-btn" onclick="markAct('lesson');toast('Lesson done ✅')">✔ Lesson done</button>`}
  else if(a=='cards'){fq=[...LW];cardStep()}else if(a=='match')initMatch();else initSent(a)}
 function cardStep(){if(!fq.length){qq=sh(LW);return nextQuiz()}const w=fq[0];speak(w.word);
- $('stage').innerHTML=`<div class="mu">${fq.length} word(s) left</div><div class="big">${ico(w)}</div><div><span class="vw">${w.word}</span> <span data-say="${esc(strip(w.word))}" style="cursor:pointer">🔊</span></div><div class="ph" style="font-size:16px;margin-bottom:10px">[${w.phonetic}] — ${w.translation}</div><ul class="ex">${exs(w)}</ul><div class="row"><button class="action-btn no" onclick="ans(0)">❌ Repeat later</button><button class="action-btn" onclick="ans(1)">✅ Got it (+10)</button></div>`}
+ $('stage').innerHTML=`<div class="mu">${fq.length} word(s) left</div><div class="big">${ico(w)}</div><div><span class="vw">${w.word}</span> <span data-say="${esc(strip(w.word))}" style="cursor:pointer">🔊</span></div><div class="ph" style="font-size:16px;margin-bottom:10px">${ph(w)}</div><ul class="ex">${exs(w)}</ul><div class="row"><button class="action-btn no" onclick="ans(0)">❌ Repeat later</button><button class="action-btn" onclick="ans(1)">✅ Got it (+10)</button></div>`}
 function ans(ok){const w=fq.shift();if(ok){addPoints(10);sound()}else fq.push(w);cardStep()}
 function nextQuiz(){clearInterval(qtm);if(!qq.length){markAct('cards');return finish('🎯 Flashcards complete!')}
  qt=qq.shift();const opts=sh([qt,...sh(wordsOf(W).filter(x=>x.id!==qt.id)).slice(0,3)]);let t=20;
@@ -96,8 +109,8 @@ function initMatch(){let sel=null,n=0;$('stage').innerHTML=`<h3>Match word ↔ i
  const mk=(c,txt,id,fn)=>{const b=document.createElement('div');b.className='mb';b.innerText=txt;b.dataset.id=id;b.onclick=()=>fn(b);$(c).appendChild(b)};
  LW.forEach(w=>mk('lc',strip(w.word),w.id,b=>{document.querySelectorAll('#lc .mb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=b;speak(w.word)}));
  sh(LW).forEach(w=>mk('rc',(w.icon||'')+' '+w.translation,w.id,b=>{if(!sel)return;if(sel.dataset.id==b.dataset.id){sound();addPoints(5);sel.classList.add('gone');b.classList.add('gone');sel=null;if(++n==LW.length){markAct('match');finish('🧩 Match complete!')}}else{b.style.borderColor='#ef4444';setTimeout(()=>b.style.borderColor='#e5e7eb',500)}}))}
-function sents(){const s=[];LW.forEach(w=>w.examples.forEach(e=>{const tk=strip(e.target).split(' ');if(tk.length>2)s.push({english:e.english,order:tk})}));
- return (s.length?s:(appData[lang].sentences||[]).map(x=>({english:x.english,order:x.correctOrder,words:x.words}))).slice(0,4)}
+function sents(){const s=[];LW.forEach(w=>{const E=w.examples||[];E.forEach(e=>{const tk=strip(e.target).split(' ');if(tk.length>2)s.push({english:e.english.replace(/ \([^)]*\)$/,''),order:tk})});if(!E.length){const tk=strip(w.word).split(' ');if(tk.length>2)s.push({english:w.translation,order:tk})}});
+ return (s.length?sh(s):(appData[lang].sentences||[]).map(x=>({english:x.english,order:x.correctOrder,words:x.words}))).slice(0,4)}
 function initSent(mode){const L=sents(),nz=s=>strip(s).toLowerCase().replace(/[\s.!?,]/g,'');let i=0;
  const show=()=>{if(i>=L.length){markAct(mode);return finish(mode=='type'?'⌨️ Typing complete!':'🧱 Reorder complete!')}
   const q=L[i],ok0=t=>nz(t)==nz(q.order.join(' ')),chk=ok=>{const f=$('fb');f.style.color=ok?'#10b981':'#ef4444';f.textContent=ok?'✨ Excellent! (+15)':'❌ Try again!'+(mode=='type'?' ('+q.order.join(' ')+')':'');if(ok){sound();addPoints(15);speak(q.order.join(' '));i++;setTimeout(show,1100)}};
@@ -106,6 +119,15 @@ function initSent(mode){const L=sents(),nz=s=>strip(s).toLowerCase().replace(/[\
    document.querySelectorAll('[data-p]').forEach(e=>e.onclick=()=>{const c=ch[e.dataset.p];c.u=1;sel.push(c);draw()});
    document.querySelectorAll('[data-r]').forEach(e=>e.onclick=()=>{const c=ch[e.dataset.r];c.u=0;sel=sel.filter(x=>x!==c);draw()});
    $('ck').onclick=()=>chk(ok0(sel.map(c=>c.w).join(' ')))};draw()}};show()}
+// ---------- GLOSSARY (all words learned in a world) ----------
+let GW=null;
+function learned(w){const d=done(w),o={};levelsOf(w).forEach((lv,i)=>{const A=P.act[pk(w)+'|'+i]||[];if(i<d||A.includes('lesson')||A.includes('cards'))lv.forEach(x=>(o[x._c]=o[x._c]||[]).push(x))});return o}
+function openGlo(id){GW=id||GW||(W&&W.id)||WORLDS[0].id;$('glo').style.display='flex';gloRender()}
+function gloRender(){const w=WORLDS.find(x=>x.id==GW),cnt=Object.values(learned(w)).flat().length;
+ $('gc').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">📚 Glossary</h3><button class="nav-btn" onclick="$('glo').style.display='none'">✕</button></div><div class="row" style="margin:10px 0">${WORLDS.map(x=>`<button class="nav-btn" style="${x.id==GW?'':'opacity:.55'}" onclick="GW='${x.id}';gloRender()">${x.icon} ${x.name}</button>`).join('')}</div><p class="mu">${cnt}/${wordsOf(w).length} words learned · ${lang=='de'?'German':'Thai'}</p><input id="gq" placeholder="Search..." oninput="gloList()"><div id="gl"></div>`;gloList()}
+function gloList(){const w=WORLDS.find(x=>x.id==GW),g=learned(w),q=$('gq').value.toLowerCase();
+ $('gl').innerHTML=Object.keys(g).length?Object.entries(g).map(([c,a])=>{const r=a.filter(x=>!q||(strip(x.word)+x.translation).toLowerCase().includes(q));return r.length?`<h4>${c}</h4>`+r.map(x=>`<div data-say="${esc(strip(x.word))}" style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #eee;cursor:pointer"><span style="font-size:26px">${ico(x)}</span><div><b>${x.word}</b> 🔊<div class="ph">${ph(x)}</div></div></div>`).join(''):''}).join(''):'<p>Do the lessons or flashcards of a level to fill your glossary 📖</p>'}
+
 $('userScore').textContent=P.score;home();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
