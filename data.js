@@ -476,3 +476,62 @@ const appData = {
     ]
   }
 };
+(function(){
+  const R = `
+Food & Groceries|🧀|Cheese|der Käse|ชีส|chîis
+Food & Groceries|🥦|Vegetable|das Gemüse|ผัก|phàk
+Food & Groceries|🥚|Egg|das Ei|ไข่|khài
+Food & Groceries|🍚|Rice|der Reis|ข้าว|khâao
+Questions to Ask|💶|How much does this cost?|Wie viel kostet das?|ราคาเท่าไหร่|raa-khaa thâo-ràai
+Questions to Ask|🍏|Do you have organic apples?|Haben Sie Bio-Äpfel?|คุณมีแอปเปิ้ลออร์แกนิกไหม|khun mii âep-pîn ɔɔ-gà-nik măi
+Questions to Ask|💳|Can I pay by card?|Kann ich mit Karte bezahlen?|จ่ายด้วยบัตรได้ไหม|jàai dûuy bàt dâai măi
+Questions to Ask|🧾|Where is the checkout?|Wo ist die Kasse?|แคชเชียร์อยู่ไหน|kháet-chîia yùu năi
+Common Phrases|🛍️|I would like a bag, please.|Ich hätte gerne eine Tasche, bitte.|ขอถุงหน่อยครับ/ค่ะ|khǒo thǔng nɔ̀y kráp/khâ
+Common Phrases|🧾|Do you need a receipt?|Brauchen Sie einen Kassenbon?|รับใบเสร็จไหม|ráp bai-sèt măi
+Common Phrases|🌿|Everything is fresh.|Alles ist frisch.|ทุกอย่างสดมาก|thúk yàang sòt mâak
+Common Phrases|⏳|Just a moment, please.|Einen Moment, bitte.|รอสักครู่ครับ/ค่ะ|rɔɔ sàk-khrûu kráp/khâ
+Verbs & Actions|💳|To pay|bezahlen|จ่ายเงิน|jàai ngern|I pay for the milk.~Ich bezahle die Milch.~ฉัน จ่าย ค่า นม~chǎn jàai khâa nom|Can I pay by card?~Kann ich mit Karte bezahlen?~จ่าย ด้วย บัตร ได้ ไหม~jàai dûuy bàt dâai măi|He pays at the checkout.~Er bezahlt an der Kasse.~เขา จ่ายเงิน ที่ แคชเชียร์~khao jàai ngern thîi kháet-chîia
+Verbs & Actions|🔍|To look for|suchen|หา|hǎa|I am looking for cheese.~Ich suche Käse.~ฉัน หา ชีส~chǎn hǎa chîis|What are you looking for?~Was suchst du?~คุณ หา อะไร~khun hǎa à-rai|She is looking for the organic apples.~Sie sucht die Bio-Äpfel.~เธอ กำลัง หา แอปเปิ้ล ออร์แกนิก~thoe gam-lang hǎa âep-pîn ɔɔ-gà-nik
+Verbs & Actions|🤲|To give|geben*|ให้|hâi|Give me a bag, please.~Gib mir bitte eine Tasche.~ขอ ถุง ให้ ฉัน หน่อย~khǒo thǔng hâi chǎn nɔ̀y|The cashier gives me the receipt.~Die Kasse gibt mir den Kassenbon.~แคชเชียร์ ให้ ใบเสร็จ ฉัน~kháet-chîia hâi bai-sèt chǎn|Do you give discounts?|Geben Sie Rabatte?|คุณให้ส่วนลดไหม|khun hâi sùan-lót măi
+Verbs & Actions|🛒|To buy|kaufen|ซื้อ|súu|I buy fresh vegetables.~Ich kaufe frisches Gemüse.~ฉัน ซื้อ ผัก สด~chǎn súu phàk sòt|Where can I buy rice?~Wo kann ich Reis kaufen?|ฉัน จะ ซื้อ ข้าว ได้ ที่ไหน~chǎn jà-súu khâao dâai thîi năi|She buys an apple.~Sie kauft einen Apfel.~เธอ ซื้อ แอปเปิ้ล~thoe súu âep-pîn
+Verbs & Actions|🍽️|To eat|essen*|กิน|gin|I eat an apple.~Ich esse einen Apfel.~ฉัน ทาน แอปเปิ้ล~chǎn thaan âep-pîn|Do you eat cheese?~Isst du Käse?~คุณ กิน ชีส ไหม~khun gin chîis măi|We eat bread for breakfast.~Wir essen Brot zum Frühstück.~พวกเรา กิน ขนมปัง เป็น มื้อเช้า~phûak-rao gin khà-nŏm-bpang bpen mûu cháao
+Verbs & Actions|🥤|To drink|trinken*|ดื่ม|dùum|I drink water.~Ich trinke Wasser.~ฉัน ดื่ม น้ำ~chǎn dùum náam|Do you want to drink milk?~Möchtest du Milch trinken?|คุณ อยาก ดื่ม นม ไหม~khun yàak dùum nom măi|He drinks cold water.~Er trinkt kaltes Wasser.~เขา ดื่ม น้ำ เย็น~khao dùum náam yen
+Verbs & Actions|🏷️|To cost|kosten|ราคา|raa-khaa|How much does this cost?~Wie viel kostet das?|ราคา เท่าไหร่~raa-khaa thâo-ràai|The apple costs one euro.~Der Apfel kostet einen Euro.~แอปเปิ้ล ราคา หนึ่ง ยูโร~âep-pîn raa-khaa nèung yuu-ro|Everything costs ten euros.~Alles kostet zehn Euro.~ทุกอย่าง ราคา สิบ ยูโร~thúk yàang raa-khaa sìp yuu-ro
+Verbs & Actions|❗|To need|brauchen|ต้องการ|tông-kaan|I need a bag.~Ich brauche eine Tasche.~ฉัน ต้องการ ถุง~chǎn tông-kaan thǔng|Do you need a receipt?~Brauchen Sie einen Kassenbon?|คุณ ต้องการ ใบเสร็จ ไหม~khun tông-kaan bai-sèt măi|She needs fresh milk.~Sie braucht frische Milch.~เธอ ต้องการ นม สด~thoe tông-kaan nom sòt
+Verbs & Actions|🧺|To have|haben*|มี|mii|Do you have organic apples?|Haben Sie Bio-Äpfel?|คุณมีแอปเปิ้ลออร์แกนิกไหม|khun mii âep-pîn ɔɔ-gà-nik măi|I have a card.~Ich habe eine Karte.~ฉัน มี บัตร~chǎn mii bàt|He has no money.~Er hat kein Geld.~เขา ไม่ มี เงิน~khao mâi mii ngern
+Verbs & Actions|🔎|To find|finden*|หาเจอ|hǎa jur|Where can I find the milk?|Wo finde ich die Milch?|จะ หา นม ได้ ที่ไหน|jà hǎa nom dâai thîi năi|I found the rice.~Ich habe den Reis gefunden.~ฉัน เจอ ข้าว แล้ว~chǎn jur khâao lɛ́ɛo|Do you find the supermarket?~Findest du den Supermarkt?|คุณ หา ซุปเปอร์มาร์เก็ต เจอ ไหม~khun hǎa súp-pəə-mâa-gét jur măi
+Verbs & Actions|✋|To take|nehmen*|เอา|ao|I will take this bag.~Ich nehme diese Tasche.~ฉัน เอา ถุง นี้~chǎn ao thǔng níi|Take your receipt, please.~Nehmen Sie bitte den Kassenbon.~กรุณา รับ ใบเสร็จ ด้วย~gà-rú-naa ráp bai-sèt dûuy|She takes an apple.~Sie nimmt einen Apfel.~เธอ หยิบ แอปเปิ้ล~thoe yìp âep-pîn
+Verbs & Actions|🏪|To sell|verkaufen|ขาย|khǎai|Do you sell organic food?|Verkaufen Sie Bio-Produkte?|คุณ ขาย สินค้า ออร์แกนิก ไหม|khun khǎai sǐn-kháa ɔɔ-gà-nik măi|They sell fresh fish.~Sie verkaufen frischen Fisch.~พวกเขา ขาย ปลา สด~phûak-khao khǎai bplaa sòt|I want to sell this.~Ich möchte das verkaufen.~ฉัน อยาก ขาย สิ่ง นี้~chǎn yàak khǎai sìn níi
+Verbs & Actions|🚪|To open|öffnen|เปิด|pèrt|The supermarket opens at 8 AM.~Der Supermarkt öffnet um 8 Uhr.~ซุปเปอร์มาร์เก็ต เปิด ตอน แปด โมง~súp-pəə-mâa-gét pèrt dɔɔn bpàet moong|Open the door, please.~Öffnen Sie bitte die Tür.~กรุณา เปิด ประตู ด้วย~gà-rú-naa pèrt bprà-tuu dûuy|When do you open?|Wann öffnen Sie?|คุณ เปิด กี่ โมง~khun pèrt gìi moong
+Verbs & Actions|🔒|To close|schließen*|ปิด|bpìt|The shop closes soon.~Der Laden schließt bald.~ร้าน ใกล้ ปิด แล้ว~ráan glâi bpìt lɛ́ɛo|Close the bag, please.~Schließen Sie die Tasche, bitte.~กรุณา ปิด กระเป๋า ด้วย~gà-rú-naa bpìt grà-pǎo dûuy|We close at 10 PM.~Wir schließen um 22 Uhr.~พวกเรา ปิด ตอน สี่ ทุ่ม~phûak-rao bpìt dɔɔn sìi thûm
+Verbs & Actions|🙋|To ask|fragen|ถาม|thǎam|May I ask a question?|Darf ich etwas fragen?|ขอ ถาม หน่อย ได้ ไหม|khǒo thǎam nɔ̀y dâai măi|The customer asks the cashier.~Der Kunde fragt die Kasse.~ลูกค้า ถาม แคชเชียร์~lûuk-kháa thǎam kháet-chîia|Ask for the price, please.~Fragen Sie nach dem Preis, bitte.~กรุณา ถาม ราคา~gà-rú-naa thǎam raa-khaa
+Verbs & Actions|⏳|To wait|warten|รอ|rɔɔ|Wait a moment, please.~Warten Sie einen Moment, bitte.~รอ สัก ครู่ ครับ~rɔɔ sàk-khrûu kráp|I am waiting for the change.~Ich warte auf das Rückgeld.~ฉัน รอ เงิน ทอน~chǎn rɔɔ ngern thɔɔn|She waits at the checkout.~Sie wartet an der Kasse.~เธอ รอ ที่ แคชเชียร์~thoe rɔɔ thîi kháet-chîia
+Verbs & Actions|👀|To look / watch|schauen|มอง / ดู|moong / duu|Look at this apple!|Schau dir diesen Apfel an!|ดู แอปเปิ้ล นี่ สิ~duu âep-pîn nîi sì|I am just looking around.~Ich schaue mich nur um.~ฉัน แค่ เดิน ดู รอบๆ~chǎn khɛ̂ɛ dəən duu rɔ̂ɔp-rɔ̂ɔp|Look at the prices.~Schauen Sie auf die Preise.~ดู ราคา สิ~duu raa-khaa sì
+Verbs & Actions|👉|To choose|wählen|เลือก|lûaek|Choose your favorite fruit.~Wählen Sie Ihr Lieblingsobst.~เลือก ผลไม้ ที่ คุณ ชอบ~lûaek phŏn-lá-mái thîi khun chɔ̂ɔp|I choose the fresh bread.~Ich wähle das frische Brot.~ฉัน เลือก ขนมปัง สด~chǎn lûaek khà-nŏm-bpang sòt|Have you chosen?|Haben Sie gewählt?|คุณ เลือก หรือ ยัง~khun lûaek rʉ̌u yang
+Verbs & Actions|😋|To try|probieren|ลอง|lɔɔng|May I try a piece?|Darf ich ein Stück probieren?|ขอ ชิม หน่อย ได้ ไหม|khǒo chim nɔ̀y dâai măi|Try this cheese.~Probieren Sie diesen Käse.~ลอง ชิม ชีส นี้ ดู~lɔɔng chim chîis níi duu|I want to try new food.~Ich möchte neues Essen probieren.~ฉัน อยาก ลอง อาหาร ใหม่~chǎn yàak lɔɔng aa-hǎan mài
+Verbs & Actions|🆘|To help|helfen*|ช่วยเหลือ|chûuay lʉ̌a|Can you help me?|Können Sie mir helfen?|ช่วย ฉัน หน่อย ได้ ไหม~chûuay chǎn nɔ̀y dâai măi|I can help you.~Ich kann Ihnen helfen.~ฉัน ช่วย คุณ ได้~chǎn chûuay khun dâai|The employee helps the customer.~Der Mitarbeiter hilft dem Kunden.~พนักงาน ช่วย ลูกค้า~phá-nák-ngaan chûuay lûuk-kháa
+  `.trim().split('\n');
+
+  const have = l => new Set(Object.values(appData[l].levels).flatMap(c => Object.values(c).flat()).map(w => w.word));
+  
+  R.forEach((r, i) => {
+    const [c, ic, en, de, th, rom, ...ex] = r.split('|');
+    ['de', 'th'].forEach(l => {
+      const L = appData[l].levels.A1;
+      const word = l == 'de' ? de : th;
+      if (!L[c]) L[c] = [];
+      if (have(l).has(word)) return;
+      L[c].push({
+        id: 'sm' + i + l,
+        word,
+        phonetic: l == 'th' ? rom : '',
+        translation: en,
+        icon: ic,
+        examples: ex.map(e => {
+          const [ee, dd, tt, rr] = e.split('~');
+          return l == 'de' ? { target: dd, english: ee } : { target: tt, english: ee + ' (' + rr + ')' };
+        })
+      });
+    });
+  });
+})();
